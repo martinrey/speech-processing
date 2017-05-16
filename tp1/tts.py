@@ -49,8 +49,12 @@ def main():
     # Concateno todos los archivos abiertos
     archivo.write("Concatenate recoverably\n")
 
-    # Guardo el audio gene
-    archivo.write("Save as WAV file: " + str(output_dir))
+    # Selecciono el archivo concatenado
+    archivo.write("select Sound chain\n")
+
+    # Guardo el audio generado
+    archivo.write("Save as WAV file: ./" + str(output_dir))
+
     archivo.close()
 
     #  Ejecutamos el script de praat
