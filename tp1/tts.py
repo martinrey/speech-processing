@@ -36,20 +36,20 @@ def main():
          archivo.write("Read from file: " + '"audios/difonos/' + str(difono) + '.wav"' + "\n")
 
          # Renombro difono
-         archivo.write('selectObject: "Sound  '+ str(difono) + '"' + "\n")
+         archivo.write('selectObject: "Sound '+ str(difono) + '"' + "\n")
          archivo.write('Rename: "difono' + str(i) +'"' + "\n" )
 
     # Selecciono todos los archivos
-    archivo.write("select Sound difono0 \n")
+    archivo.write("select Sound difono0\n")
     i = 1
     while(i<len(difonos)):
         archivo.write("plus Sound difono"+str(i)+"\n")
         i += 1
 
     # Concateno todos los archivos abiertos
-    archivo.write("Concatenate recoverably \n")
+    archivo.write("Concatenate recoverably\n")
 
-    # Guardo el audio generado.
+    # Guardo el audio gene
     archivo.write("Save as WAV file: " + str(output_dir))
     archivo.close()
 
