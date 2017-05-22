@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 
+from parser import PitchParser
 import sys
 import os
 
@@ -18,7 +19,7 @@ def separar_en_difonos(string):
 
 def main():
     string = sys.argv[1]
-    output_dir = sys.argv[2]
+    output_name = sys.argv[2]
 
     pregunta = False
 
@@ -29,16 +30,22 @@ def main():
 
     difonos = separar_en_difonos(string)
     archivo = open("concatenar.praat", "w")
-
+    i = 0
     # Creamos script de praat que abra todos los archivos necesarios y los seleccione
-    for i, difono in enumerate(difonos):
+    while i < len(difonos):
+        # if(pregunta and 'A' in difono):
+        #     # Extraccion del pitch
+        #     os.system('praat ../scripts/extraer-pitch-track.praat' + str(difono) + '.wav ' + str(difono) + '.PitchTier 50 300')
+        #     # Modifico Pitch
+        #
+
          # Selecciono el difono
-         archivo.write("Read from file: " + '"audios/difonos/' + str(difono) + '.wav"' + "\n")
+         archivo.write("Read from file: " + '"audios/difonos/' + str(difonos[i]) + '.wav"' + "\n")
 
          # Renombro difono
-         archivo.write('selectObject: "Sound '+ str(difono) + '"' + "\n")
+         archivo.write('selectObject: "Sound '+ str(difonos[i]) + '"' + "\n")
          archivo.write('Rename: "difono' + str(i) +'"' + "\n" )
-
+         i += 1
     # Selecciono todos los archivos
     archivo.write("select Sound difono0\n")
     i = 1
@@ -52,12 +59,24 @@ def main():
     # Selecciono el archivo concatenado
     archivo.write("select Sound chain\n")
 
+
     # Guardo el audio generado
-    archivo.write("Save as WAV file: ./" + str(output_dir))
+    archivo.write('Save as WAV file: "' + str(output_name) + '.wav"')
 
     archivo.close()
 
     #  Ejecutamos el script de praat
     os.system('praat concatenar.praat')
+
+    if(pregunta):
+        # Modifico pitch
+        print('praat extraer-pitch-track.praat ' + str(output_name) + '.wav ' + str(output_name) + '.PitchTier 50 300')
+        os.system('praat extraer-pitch-track.praat ' + str(output_name) + '.wav ' + str(output_name) + '.PitchTier 50 300')
+
+        pitch_parser = PitchParser()
+        pitch_parser.parse(filename=str(output_name)+'.PitchTier')
+
+        os.system('praat ../scripts/reemplazar-pitch-track.praat ' + str(output_name) +'.wav ' + str(output_name) + '.PitchTier '
+                    + str(output_name) +'.wav 50 300')
 
 main()

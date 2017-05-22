@@ -8,10 +8,11 @@ class Parser(object):
 
 
 class PitchParser(Parser):
-    def parse(self):
+    def parse(self, filename):
         points_size = 0
         point_index = -1
-        for line in fileinput.input('lakAsa.PitchTier', inplace=True, backup='.bak'):
+        print(filename)
+        for line in fileinput.input(filename, inplace=True,  backup='.bak'):
             entre = False
             m = re.search('points: size = (.+?)$', str(line))
             if m:
