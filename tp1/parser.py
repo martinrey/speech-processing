@@ -1,4 +1,5 @@
 import re
+import fileinput
 
 
 class Parser(object):
@@ -8,16 +9,34 @@ class Parser(object):
 
 class PitchParser(Parser):
     def parse(self):
-        points = []
-        with open('lakAsa.PitchTier', 'rb') as pitch_file:
-            for line in pitch_file:
-                m = re.search('value = (.+?)$', str(line))
-                if m:
-                    point_value = m.group(1)
-                    points.append(float(point_value[:-3]))
+        points_size = 0
+        point_index = -1
+        for line in fileinput.input('lakAsa.PitchTier', inplace=True, backup='.bak'):
+            entre = False
+            m = re.search('points: size = (.+?)$', str(line))
+            if m:
+                points_size = int(m.group(1))
 
-        if len(points) > 1:
-            points[-1] += 45 * points[-1] / 100
-            points[-2] += 45 * points[-2] / 100
-        elif len(points) == 1:
-            points[-1] += 45 * points[-1] / 100
+            if points_size > 1:
+
+                n = re.search('points \[(.+?)\]:', str(line))
+                if n:
+                    point_index = int(n.group(1))
+
+                if point_index == points_size - 1 or point_index == points_size:
+                    p = re.search('value = (.+?)$', str(line))
+                    if p:
+                        point_value = p.group(1)
+                        point_value = float(point_value)
+                        point_value += 45 * point_value / 100
+                        # line = 'value = ' + str(point_value)
+                        print('    value = ' + str(point_value))
+                        entre = True
+            if not entre:
+                print(line, end="")
+
+# if len(points) > 1:
+#            points[-1] += 45 * points[-1] / 100
+#            points[-2] += 45 * points[-2] / 100
+#        elif len(points) == 1:
+#            points[-1] += 45 * points[-1] / 100
