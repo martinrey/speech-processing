@@ -17,6 +17,11 @@ def separar_en_difonos(string):
 
     return res
 
+def limpiar():
+    os.system("rm *.PitchTier")
+    os.system("rm *.bak")
+    os.system("rm concatenar.praat")
+
 def main():
     string = sys.argv[1]
     output_name = sys.argv[2]
@@ -69,14 +74,15 @@ def main():
     os.system('praat concatenar.praat')
 
     if(pregunta):
-        # Modifico pitch
-        print('praat extraer-pitch-track.praat ' + str(output_name) + '.wav ' + str(output_name) + '.PitchTier 50 300')
-        os.system('praat extraer-pitch-track.praat ' + str(output_name) + '.wav ' + str(output_name) + '.PitchTier 50 300')
-
+        # Extraemos pitch
+        os.system('praat scripts/extraer-pitch-track.praat ../' + str(output_name) + ".wav ../" + str(output_name) + '.PitchTier 50 300')
+        # Modificamos pitch
         pitch_parser = PitchParser()
         pitch_parser.parse(filename=str(output_name)+'.PitchTier')
-
-        os.system('praat ../scripts/reemplazar-pitch-track.praat ' + str(output_name) +'.wav ' + str(output_name) + '.PitchTier '
+        # Resintetizamos audio
+        os.system('praat scripts/reemplazar-pitch-track.praat ../' + str(output_name) +'.wav ../' + str(output_name) + '.PitchTier ../'
                     + str(output_name) +'.wav 50 300')
-
+        limpiar()
+    else:
+        os.system("rm concatenar.praat")
 main()

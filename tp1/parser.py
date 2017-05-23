@@ -11,7 +11,6 @@ class PitchParser(Parser):
     def parse(self, filename):
         points_size = 0
         point_index = -1
-        print(filename)
         for line in fileinput.input(filename, inplace=True,  backup='.bak'):
             entre = False
             m = re.search('points: size = (.+?)$', str(line))
