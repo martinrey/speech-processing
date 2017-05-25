@@ -17,11 +17,6 @@ def separar_en_difonos(string):
 
     return res
 
-def limpiar():
-    os.system("rm *.PitchTier")
-    os.system("rm *.bak")
-    os.system("rm concatenar.praat")
-
 def main():
     string = sys.argv[1]
     output_name = sys.argv[2]
@@ -35,22 +30,29 @@ def main():
 
     difonos = separar_en_difonos(string)
     archivo = open("concatenar.praat", "w")
+    os.system("mkdir tmp")
     i = 0
     # Creamos script de praat que abra todos los archivos necesarios y los seleccione
     while i < len(difonos):
-        # if(pregunta and 'A' in difono):
-        #     # Extraccion del pitch
-        #     os.system('praat ../scripts/extraer-pitch-track.praat' + str(difono) + '.wav ' + str(difono) + '.PitchTier 50 300')
-        #     # Modifico Pitch
-        #
+        if(pregunta and 'A' in difonos[i]):
+            # Extraccion del pitch
+            os.system('praat scripts/extraer-pitch-track.praat ../audios/difonos/' + str(difonos[i]) + '.wav ../tmp/' + str(difonos[i]) + '.PitchTier 50 300')
+            # Modifico Pitch
+            pitch_parser = PitchParser()
+            pitch_parser.parse(filename="tmp/" + str(difonos[i]) + '.PitchTier')
+            # Resintetizamos audio
+            os.system('praat scripts/reemplazar-pitch-track.praat ../audios/difonos/' + str(difonos[i]) +'.wav ../tmp/' + str(difonos[i]) + '.PitchTier ../tmp/' + str(difonos[i]) +'.wav 50 300')
 
-         # Selecciono el difono
-         archivo.write("Read from file: " + '"audios/difonos/' + str(difonos[i]) + '.wav"' + "\n")
+        else:
+            os.system("cp audios/difonos/" + str(difonos[i]) +".wav tmp/"   )
 
-         # Renombro difono
-         archivo.write('selectObject: "Sound '+ str(difonos[i]) + '"' + "\n")
-         archivo.write('Rename: "difono' + str(i) +'"' + "\n" )
-         i += 1
+        # Selecciono el difono
+        archivo.write("Read from file: " + '"tmp/' + str(difonos[i]) + '.wav"' + "\n")
+
+        # Renombro difono
+        archivo.write('selectObject: "Sound '+ str(difonos[i]) + '"' + "\n")
+        archivo.write('Rename: "difono' + str(i) +'"' + "\n" )
+        i += 1
     # Selecciono todos los archivos
     archivo.write("select Sound difono0\n")
     i = 1
@@ -75,14 +77,17 @@ def main():
 
     if(pregunta):
         # Extraemos pitch
-        os.system('praat scripts/extraer-pitch-track.praat ../' + str(output_name) + ".wav ../" + str(output_name) + '.PitchTier 50 300')
+        os.system('praat scripts/extraer-pitch-track.praat ../' + str(output_name) + ".wav ../tmp/" + str(output_name) + '.PitchTier 50 300')
         # Modificamos pitch
         pitch_parser = PitchParser()
-        pitch_parser.parse(filename=str(output_name)+'.PitchTier')
+        pitch_parser.parse(filename="tmp/" + str(output_name)+'.PitchTier')
         # Resintetizamos audio
-        os.system('praat scripts/reemplazar-pitch-track.praat ../' + str(output_name) +'.wav ../' + str(output_name) + '.PitchTier ../'
+        os.system('praat scripts/reemplazar-pitch-track.praat ../' + str(output_name) +'.wav ../tmp/' + str(output_name) + '.PitchTier ../'
                     + str(output_name) +'.wav 50 300')
-        limpiar()
-    else:
-        os.system("rm concatenar.praat")
+
+        os.system("rm *.bak")
+        os.system("rm *.PitchTier")
+
+    os.system("rm  concatenar.praat")
+    os.system("rm -rf tmp/")
 main()
