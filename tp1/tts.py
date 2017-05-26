@@ -85,9 +85,6 @@ def main():
         os.system('praat scripts/reemplazar-pitch-track.praat ../' + str(output_name) +'.wav ../tmp/' + str(output_name) + '.PitchTier ../'
                     + str(output_name) +'.wav 50 300')
 
-        os.system("rm *.bak")
-        os.system("rm *.PitchTier")
-
     os.system("rm  concatenar.praat")
     os.system("rm -rf tmp/")
 main()

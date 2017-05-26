@@ -22,13 +22,22 @@ class PitchParser(Parser):
                 n = re.search('points \[(.+?)\]:', str(line))
                 if n:
                     point_index = int(n.group(1))
-
-                if point_index == points_size - 1 or point_index == points_size:
+                #
+                # if point_index == points_size - 1 or point_index == points_size:
+                #     p = re.search('value = (.+?)$', str(line))
+                #     if p:
+                #         point_value = p.group(1)
+                #         point_value = float(point_value)
+                #         point_value += 45 * point_value / 100
+                #         # line = 'value = ' + str(point_value)
+                #         print('    value = ' + str(point_value))
+                #         entre = True
+                if point_index >= points_size - 6:
                     p = re.search('value = (.+?)$', str(line))
                     if p:
                         point_value = p.group(1)
                         point_value = float(point_value)
-                        point_value += 45 * point_value / 100
+                        point_value += (point_index * 25) * point_value / 100
                         # line = 'value = ' + str(point_value)
                         print('    value = ' + str(point_value))
                         entre = True
