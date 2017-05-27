@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 
 from parser import PitchParser
 import sys
@@ -19,10 +19,11 @@ def separar_en_difonos(string):
 
 def main():
     string = sys.argv[1]
-    output_name = sys.argv[2]
+    # Separamos en el nombre del archivo y el path a donde se guardara
+    output_dir = sys.argv[2]
+    output_name = os.path.basename(output_dir)[:-4]
 
     pregunta = False
-
     if(string[-1] == '?'):
         pregunta = True
         string = string[:-1]
@@ -68,7 +69,7 @@ def main():
 
 
     # Guardo el audio generado
-    archivo.write('Save as WAV file: "' + str(output_name) + '.wav"')
+    archivo.write('Save as WAV file: "' + str(output_dir) + '"')
 
     archivo.close()
 
@@ -77,13 +78,13 @@ def main():
 
     if(pregunta):
         # Extraemos pitch
-        os.system('praat scripts/extraer-pitch-track.praat ../' + str(output_name) + ".wav ../tmp/" + str(output_name) + '.PitchTier 50 300')
+        os.system('praat scripts/extraer-pitch-track.praat ../' + str(output_dir) + " ../tmp/" + str(output_name) + '.PitchTier 50 300')
         # Modificamos pitch
         pitch_parser = PitchParser()
         pitch_parser.parse(filename="tmp/" + str(output_name)+'.PitchTier')
         # Resintetizamos audio
-        os.system('praat scripts/reemplazar-pitch-track.praat ../' + str(output_name) +'.wav ../tmp/' + str(output_name) + '.PitchTier ../'
-                    + str(output_name) +'.wav 50 300')
+        os.system('praat scripts/reemplazar-pitch-track.praat ../' + str(output_dir) +' ../tmp/' + str(output_name) + '.PitchTier ../'
+                    + str(output_dir) +' 50 300')
 
     os.system("rm  concatenar.praat")
     os.system("rm -rf tmp/")
