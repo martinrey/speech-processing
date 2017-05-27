@@ -78,12 +78,12 @@ def main():
 
     if(pregunta):
         # Extraemos pitch
-        os.system('praat scripts/extraer-pitch-track.praat ../' + str(output_dir) + " ../tmp/" + str(output_name) + '.PitchTier 50 300')
+        os.system('praat scripts/extraer-pitch-track.praat ' + str(output_dir) + " ../tmp/" + str(output_name) + '.PitchTier 50 300')
         # Modificamos pitch
         pitch_parser = PitchParser()
         pitch_parser.parse(filename="tmp/" + str(output_name)+'.PitchTier')
         # Resintetizamos audio
-        os.system('praat scripts/reemplazar-pitch-track.praat ../' + str(output_dir) +' ../tmp/' + str(output_name) + '.PitchTier ../'
+        os.system('praat scripts/reemplazar-pitch-track.praat ' + str(output_dir) +' ../tmp/' + str(output_name) + '.PitchTier '
                     + str(output_dir) +' 50 300')
 
     os.system("rm  concatenar.praat")
