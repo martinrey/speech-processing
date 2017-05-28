@@ -93,6 +93,7 @@ def main():
 
     os.system("rm  concatenar.praat")
     os.system("rm -rf tmp/")
+    os.system("rm -rf __pycache__")
 
 
 main()
