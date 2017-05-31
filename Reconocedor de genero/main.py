@@ -39,7 +39,7 @@ class ConvolutionalNeuralNetwork(object):
             tf_valid_dataset = tf.constant(self.validation_set)
 
             # Convolution variables
-            # [filter_width, in_channels, out_channels],
+            # [filter_width, in_channels, out_channels]
             layer1_weights = tf.Variable(tf.truncated_normal(
                 [self.patch_size, self.num_channels, 16], stddev=0.1))
             layer1_biases = tf.Variable(tf.zeros([16]))
@@ -117,14 +117,20 @@ class ConvolutionalNeuralNetwork(object):
             loss = tf.reduce_mean(
                 tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_train_labels))
 
+            # Learning rate
+            #global_step = tf.Variable(0, trainable=False)
+            #starting_learning_rate = 0.01
+            #learning_rate = tf.train.exponential_decay(starting_learning_rate,
+            #                                           global_step, 10, 0.96, staircase=True)
+
             # Optimizer.
-            optimizer = tf.train.GradientDescentOptimizer(0.0001).minimize(loss)
+            optimizer = tf.train.GradientDescentOptimizer(0.000001).minimize(loss)
 
             # Predictions for the training, validation, and test data.
             train_prediction = tf.nn.softmax(logits)
             valid_prediction = tf.nn.softmax(model(tf_valid_dataset))
 
-        num_steps = 5000
+        num_steps = 300
 
         with tf.Session(graph=graph) as session:
             tf.global_variables_initializer().run()
