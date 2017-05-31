@@ -24,9 +24,8 @@ class ConvolutionalNeuralNetwork(object):
 
     # HAY QUE REDEFINIRLA PARA MULTILABEL
     def _accuracy(self, predictions, labels):
-        def accuracy(predictions, labels):
-            return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
-                    / predictions.shape[0])
+        return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
+                / predictions.shape[0])
 
     def train(self):
         # Define the network graph
@@ -119,7 +118,7 @@ class ConvolutionalNeuralNetwork(object):
                 tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_train_labels))
 
             # Optimizer.
-            optimizer = tf.train.AdamOptimizer(1e-4).minimize(loss)
+            optimizer = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
 
             # Predictions for the training, validation, and test data.
             train_prediction = tf.nn.softmax(logits)
@@ -134,8 +133,8 @@ class ConvolutionalNeuralNetwork(object):
             for step in range(num_steps):
                 print(step)
                 batch_offset = (step * self.batch_size) % (len(self.training_set))
-                batch_data = training_set[batch_offset:(batch_offset + self.batch_size)]
-                batch_labels = training_labels[batch_offset:(batch_offset + self.batch_size)]
+                batch_data = self.training_set[batch_offset:(batch_offset + self.batch_size)]
+                batch_labels = self.training_labels[batch_offset:(batch_offset + self.batch_size)]
                 batch_data, batch_labels = shuffle(batch_data, batch_labels, random_state=0)
 
                 feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
@@ -146,7 +145,7 @@ class ConvolutionalNeuralNetwork(object):
                     print("Minibatch accuracy: {:01.2f} at step {}".format(
                         self._accuracy(train_prediction.eval(feed_dict={tf_train_dataset: batch_data}), batch_labels),
                         step))
-                    print("Validation accuracy: %.1f%%" % accuracy(
+                    print("Validation accuracy: %.1f%%" % self._accuracy(
                         valid_prediction.eval(), self.validation_labels))
 
 
@@ -154,38 +153,77 @@ class ConvolutionalNeuralNetwork(object):
 #                                                                                self.validation_labels_reader.read(
 #                                                                                    from_index=0, to_index=1000))))
 
+def main():
+    RUTA_DIRECTORIO_DATOS = "../datos"
+    VENTANA_EN_SEGUNDOS = 10
+    SAMPLE_RATE = 16000
+    CANTIDAD_DE_FRAMES_A_PROCESAR = 32768
 
-training_set = np.zeros((100, 32768))
-training_labels = []
-for _ in range(100):
-    training_labels.append([1, 0])
+    archivos_en_carpeta_datos = os.listdir(RUTA_DIRECTORIO_DATOS)
+    archivos_wav = []
+    archivos_ipu = []
+    for archivo in archivos_en_carpeta_datos:
+        if (archivo[-3:] == "ipu"):
+            archivos_ipu.append(archivo)
+        elif (archivo[-3:] == "wav"):
+            archivos_wav.append(archivo)
+
+    X = []
+    for archivo_wav in archivos_wav:
+        data, frames, _, duration = wav.load_from_wav(RUTA_DIRECTORIO_DATOS + "/" + archivo_wav)
+        X.append(data[:CANTIDAD_DE_FRAMES_A_PROCESAR])
+
+    X = np.asarray(X)
+
+    def reformat(dataset):
+        shape = dataset.shape
+        dataset = dataset.reshape(
+            (shape[0], shape[1], 1)).astype(np.float32)
+        return dataset
+
+    X = reformat(X)
+    print(X.shape)
+
+    y = []
+    for archivo_wav in archivos_wav:
+        if archivo_wav[3] == "m":
+            y.append([1, 0])
+        elif archivo_wav[3] == "f":
+            y.append([0, 1])
+
+    print(np.shape(y))
 
 
-def reformat(dataset):
-    shape = dataset.shape
-    dataset = dataset.reshape(
-        (shape[0], shape[1], 1)).astype(np.float32)
-    return dataset
+    shuffle(X, y, random_state=42)
+    X_train = X[:150]
+    X_test = X[150:180]
+    y_train = y[:150]
+    y_test = X[150:180]
+
+    print("Shape X_train {}".format(np.shape(X_train)))
+    print("Shape X_test {}".format(np.shape(X_test)))
+    print("Shape y_train {}".format(np.shape(y_train)))
+    print("Shape y_test {}".format(np.shape(y_test)))
+
+    TRAINING_SET_LEN = len(X_train)
+    NUM_CHANNELS = 1
+    NUM_LABELS = 2
+    BATCH_SIZE = 10
+    PATCH_SIZE = 5
 
 
-training_set = reformat(training_set)
+    conv_net = ConvolutionalNeuralNetwork(training_set=X_train,
+                                          validation_set=X_test,
+                                          test_set=[],
+                                          training_labels=y_train,
+                                          validation_labels=y_test,
+                                          test_labels=[], training_set_len=TRAINING_SET_LEN,
+                                          num_labels=NUM_LABELS,
+                                          num_channels=NUM_CHANNELS,
+                                          image_size=CANTIDAD_DE_FRAMES_A_PROCESAR,
+                                          batch_size=BATCH_SIZE, patch_size=PATCH_SIZE)
+
+    conv_net.train()
 
 
-X_train, X_test, y_train, y_test = train_test_split(training_set, training_labels, test_size=0.20, random_state=42)
-
-conv_net = ConvolutionalNeuralNetwork(training_set=X_train,
-                                      validation_set=X_test,
-                                      test_set=[],
-                                      training_labels=y_train,
-                                      validation_labels=y_test,
-                                      test_labels=[], training_set_len=1,
-                                      num_labels=2,
-                                      num_channels=1,
-                                      image_size=32768, batch_size=100, patch_size=5)
-
-print("Shape X_train {}".format(np.shape(X_train)))
-print("Shape X_test {}".format(np.shape(X_test)))
-print("Shape y_train {}".format(np.shape(y_train)))
-print("Shape y_test {}".format(np.shape(y_test)))
-
-conv_net.train()
+main()
