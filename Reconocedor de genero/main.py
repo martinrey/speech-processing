@@ -1,3 +1,5 @@
+import os
+import wav
 import numpy as np
 import tensorflow as tf
 from sklearn.utils import shuffle
@@ -22,10 +24,9 @@ class ConvolutionalNeuralNetwork(object):
         self.batch_size = batch_size
         self.patch_size = patch_size
 
-    # HAY QUE REDEFINIRLA PARA MULTILABEL
     def _accuracy(self, predictions, labels):
-        return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
-                / predictions.shape[0])
+        result = (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1)) / predictions.shape[0])
+        return result
 
     def train(self):
         # Define the network graph
@@ -36,7 +37,6 @@ class ConvolutionalNeuralNetwork(object):
                 tf.float32, shape=(self.batch_size, self.image_size, self.num_channels))
             tf_train_labels = tf.placeholder(tf.float32, shape=(self.batch_size, self.num_labels))
             tf_valid_dataset = tf.constant(self.validation_set)
-            # tf_test_dataset = tf.constant(self.test_set)
 
             # Convolution variables
             # [filter_width, in_channels, out_channels],
@@ -118,12 +118,11 @@ class ConvolutionalNeuralNetwork(object):
                 tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_train_labels))
 
             # Optimizer.
-            optimizer = tf.train.GradientDescentOptimizer(0.01).minimize(loss)
+            optimizer = tf.train.GradientDescentOptimizer(0.0001).minimize(loss)
 
             # Predictions for the training, validation, and test data.
             train_prediction = tf.nn.softmax(logits)
             valid_prediction = tf.nn.softmax(model(tf_valid_dataset))
-            # test_prediction = tf.nn.sigmoid(model(tf_test_dataset))
 
         num_steps = 5000
 
@@ -131,7 +130,6 @@ class ConvolutionalNeuralNetwork(object):
             tf.global_variables_initializer().run()
             print("Initialized")
             for step in range(num_steps):
-                print(step)
                 batch_offset = (step * self.batch_size) % (len(self.training_set))
                 batch_data = self.training_set[batch_offset:(batch_offset + self.batch_size)]
                 batch_labels = self.training_labels[batch_offset:(batch_offset + self.batch_size)]
@@ -140,10 +138,10 @@ class ConvolutionalNeuralNetwork(object):
                 feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
                 _, l, predictions = session.run(
                     [optimizer, loss, train_prediction], feed_dict=feed_dict)
-                if (step % 5 == 0):
+                if (step % 50 == 0):
                     print("Minibatch loss:", l)
                     print("Minibatch accuracy: {:01.2f} at step {}".format(
-                        self._accuracy(train_prediction.eval(feed_dict={tf_train_dataset: batch_data}), batch_labels),
+                        self._accuracy(predictions, batch_labels),
                         step))
                     print("Validation accuracy: %.1f%%" % self._accuracy(
                         valid_prediction.eval(), self.validation_labels))
@@ -154,7 +152,7 @@ class ConvolutionalNeuralNetwork(object):
 #                                                                                    from_index=0, to_index=1000))))
 
 def main():
-    RUTA_DIRECTORIO_DATOS = "../datos"
+    RUTA_DIRECTORIO_DATOS = "datos"
     VENTANA_EN_SEGUNDOS = 10
     SAMPLE_RATE = 16000
     CANTIDAD_DE_FRAMES_A_PROCESAR = 32768
@@ -181,7 +179,7 @@ def main():
             (shape[0], shape[1], 1)).astype(np.float32)
         return dataset
 
-    X = reformat(X)
+#    X = reformat(X)
     print(X.shape)
 
     y = []
@@ -193,12 +191,11 @@ def main():
 
     print(np.shape(y))
 
-
-    shuffle(X, y, random_state=42)
+    #X, y = shuffle(X, y, random_state=0)
     X_train = X[:150]
     X_test = X[150:180]
     y_train = y[:150]
-    y_test = X[150:180]
+    y_test = y[150:180]
 
     print("Shape X_train {}".format(np.shape(X_train)))
     print("Shape X_test {}".format(np.shape(X_test)))
@@ -210,7 +207,6 @@ def main():
     NUM_LABELS = 2
     BATCH_SIZE = 10
     PATCH_SIZE = 5
-
 
     conv_net = ConvolutionalNeuralNetwork(training_set=X_train,
                                           validation_set=X_test,
