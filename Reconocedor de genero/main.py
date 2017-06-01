@@ -25,7 +25,7 @@ class ConvolutionalNeuralNetwork(object):
         self.patch_size = patch_size
 
     def _accuracy(self, predictions, labels):
-        result = (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1)) / predictions.shape[0])
+        result = (100.0 * np.sum(np.argmax(predictions, axis=1) == np.argmax(labels, axis=1)) / predictions.shape[0])
         return result
 
     def train(self):
@@ -40,46 +40,49 @@ class ConvolutionalNeuralNetwork(object):
 
             # Convolution variables
             # [filter_width, in_channels, out_channels]
-            layer1_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, self.num_channels, 16], stddev=0.1))
+
+
+            layer1_weights = tf.get_variable("layer1_weights", shape=[self.patch_size, self.num_channels, 16],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer1_biases = tf.Variable(tf.zeros([16]))
-            layer2_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 16, 32], stddev=0.1))
+            layer2_weights = tf.get_variable("layer2_weights", shape=[self.patch_size, 16, 32],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer2_biases = tf.Variable(tf.zeros([32]))
-            layer3_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 32, 64], stddev=0.1))
+            layer3_weights = tf.get_variable("layer3_weights", shape=[self.patch_size, 32, 64],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer3_biases = tf.Variable(tf.zeros([64]))
-            layer4_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 64, 128], stddev=0.1))
+            layer4_weights = tf.get_variable("layer4_weights", shape=[self.patch_size, 64, 128],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer4_biases = tf.Variable(tf.constant(1.0, shape=[128]))
-            layer5_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 128, 256], stddev=0.1))
+
+            layer5_weights = tf.get_variable("layer5_weights", shape=[self.patch_size, 128, 256],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer5_biases = tf.Variable(tf.zeros([256]))
-            layer6_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 256, 512], stddev=0.1))
+            layer6_weights = tf.get_variable("layer6_weights", shape=[self.patch_size, 256, 512],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer6_biases = tf.Variable(tf.zeros([512]))
-            layer7_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 512, 1024], stddev=0.1))
+            layer7_weights = tf.get_variable("layer7_weights", shape=[self.patch_size, 512, 1024],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer7_biases = tf.Variable(tf.zeros([1024]))
-            layer8_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 1024, 2048], stddev=0.1))
+            layer8_weights = tf.get_variable("layer8_weights", shape=[self.patch_size, 1024, 2048],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer8_biases = tf.Variable(tf.constant(1.0, shape=[2048]))
-            layer9_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 2048, 4096], stddev=0.1))
-            layer9_biases = tf.Variable(tf.zeros([4096]))
-            layer10_weights = tf.Variable(tf.truncated_normal(
-                [self.patch_size, 4096, 8192], stddev=0.1))
-            layer10_biases = tf.Variable(tf.zeros([8192]))
+#            layer9_weights = tf.Variable(tf.truncated_normal(
+#                [self.patch_size, 2048, 4096], stddev=0.1))
+#            layer9_biases = tf.Variable(tf.zeros([4096]))
+#            layer10_weights = tf.Variable(tf.truncated_normal(
+#                [self.patch_size, 4096, 8192], stddev=0.1))
+#            layer10_biases = tf.Variable(tf.zeros([8192]))
 
             # DNN variables
-            layer14_weights = tf.Variable(tf.truncated_normal(
-                [32 * 8192, 2048], stddev=0.1))
-            layer14_biases = tf.Variable(tf.constant(1.0, shape=[2048]))
-            layer15_weights = tf.Variable(tf.truncated_normal(
-                [2048, 2048], stddev=0.1))
-            layer15_biases = tf.Variable(tf.constant(1.0, shape=[2048]))
-            layer16_weights = tf.Variable(tf.truncated_normal(
-                [2048, self.num_labels], stddev=0.1))
+            layer14_weights = tf.get_variable("layer14_weights", shape=[512 * 2048, 200],
+                initializer=tf.contrib.layers.xavier_initializer())
+            layer14_biases = tf.Variable(tf.constant(1.0, shape=[200]))
+            layer15_weights = tf.get_variable("layer15_weights", shape=[200, 200],
+                initializer=tf.contrib.layers.xavier_initializer())
+            layer15_biases = tf.Variable(tf.constant(1.0, shape=[200]))
+            layer16_weights = tf.get_variable("layer16_weights", shape=[200, self.num_labels],
+                initializer=tf.contrib.layers.xavier_initializer())
             layer16_biases = tf.Variable(tf.constant(1.0, shape=[self.num_labels]))
 
             def model(data):
@@ -100,10 +103,10 @@ class ConvolutionalNeuralNetwork(object):
                 hidden = tf.nn.relu(conv + layer7_biases)
                 conv = tf.nn.conv1d(hidden, layer8_weights, 2, padding='SAME')
                 hidden = tf.nn.relu(conv + layer8_biases)
-                conv = tf.nn.conv1d(hidden, layer9_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer9_biases)
-                conv = tf.nn.conv1d(hidden, layer10_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer10_biases)
+#                conv = tf.nn.conv1d(hidden, layer9_weights, 2, padding='SAME')
+#                hidden = tf.nn.relu(conv + layer9_biases)
+#                conv = tf.nn.conv1d(hidden, layer10_weights, 2, padding='SAME')
+#                hidden = tf.nn.relu(conv + layer10_biases)
 
                 # DNN
                 shape = hidden.get_shape().as_list()
@@ -124,13 +127,13 @@ class ConvolutionalNeuralNetwork(object):
             #                                           global_step, 10, 0.96, staircase=True)
 
             # Optimizer.
-            optimizer = tf.train.GradientDescentOptimizer(0.000001).minimize(loss)
+            optimizer = tf.train.GradientDescentOptimizer(1e-4).minimize(loss)
 
             # Predictions for the training, validation, and test data.
             train_prediction = tf.nn.softmax(logits)
             valid_prediction = tf.nn.softmax(model(tf_valid_dataset))
 
-        num_steps = 300
+        num_steps = 1000
 
         with tf.Session(graph=graph) as session:
             tf.global_variables_initializer().run()
@@ -144,7 +147,7 @@ class ConvolutionalNeuralNetwork(object):
                 feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
                 _, l, predictions = session.run(
                     [optimizer, loss, train_prediction], feed_dict=feed_dict)
-                if (step % 50 == 0):
+                if (step % 100 == 0):
                     print("Minibatch loss:", l)
                     print("Minibatch accuracy: {:01.2f} at step {}".format(
                         self._accuracy(predictions, batch_labels),
@@ -161,7 +164,7 @@ def main():
     RUTA_DIRECTORIO_DATOS = "datos"
     VENTANA_EN_SEGUNDOS = 10
     SAMPLE_RATE = 16000
-    CANTIDAD_DE_FRAMES_A_PROCESAR = 32768
+    CANTIDAD_DE_FRAMES_A_PROCESAR = 131072
 
     archivos_en_carpeta_datos = os.listdir(RUTA_DIRECTORIO_DATOS)
     archivos_wav = []
@@ -185,7 +188,7 @@ def main():
             (shape[0], shape[1], 1)).astype(np.float32)
         return dataset
 
-#    X = reformat(X)
+    X = reformat(X)
     print(X.shape)
 
     y = []
@@ -195,13 +198,13 @@ def main():
         elif archivo_wav[3] == "f":
             y.append([0, 1])
 
-    print(np.shape(y))
-
-    #X, y = shuffle(X, y, random_state=0)
+    X, y = shuffle(X, y, random_state=0)
     X_train = X[:150]
     X_test = X[150:180]
     y_train = y[:150]
     y_test = y[150:180]
+    print("LA CONCHA DE TU MADRE")
+    print(X_train.shape)
 
     print("Shape X_train {}".format(np.shape(X_train)))
     print("Shape X_test {}".format(np.shape(X_test)))
@@ -212,7 +215,7 @@ def main():
     NUM_CHANNELS = 1
     NUM_LABELS = 2
     BATCH_SIZE = 10
-    PATCH_SIZE = 5
+    PATCH_SIZE = 10
 
     conv_net = ConvolutionalNeuralNetwork(training_set=X_train,
                                           validation_set=X_test,
