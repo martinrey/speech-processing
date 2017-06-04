@@ -4,161 +4,127 @@ import numpy as np
 import tensorflow as tf
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 
-class ConvolutionalNeuralNetwork(object):
-    def __init__(self, training_set, validation_set, test_set, training_labels,
-                 validation_labels, test_labels, training_set_len, num_labels,
-                 num_channels, image_size, batch_size, patch_size):
-
-        self.training_set = training_set
-        self.validation_set = validation_set
-        self.test_set = test_set
-        self.training_labels = training_labels
-        self.validation_labels = validation_labels
-        self.test_labels = test_labels
-        self.training_set_len = training_set_len
-        self.num_labels = num_labels
+class CovNetClassifier(BaseEstimator, ClassifierMixin):
+    def __init__(self, num_channels, num_labels, image_size, batch_size, patch_size, epochs):
+        # PARAMETROS
         self.num_channels = num_channels
+        self.num_labels = num_labels
         self.image_size = image_size
         self.batch_size = batch_size
         self.patch_size = patch_size
+        self.epochs = epochs
 
-    def _accuracy(self, predictions, labels):
-        result = (100.0 * np.sum(np.argmax(predictions, axis=1) == np.argmax(labels, axis=1)) / predictions.shape[0])
-        return result
-
-    def train(self):
-        # Define the network graph
-        graph = tf.Graph()
-        with graph.as_default():
+        # PROPIEDADES DE LA RED
+        # INICIALIZO EL GRAFO
+        self.graph = tf.Graph()
+        with self.graph.as_default():
             # Input data
-            tf_train_dataset = tf.placeholder(
-                tf.float32, shape=(self.batch_size, self.image_size, self.num_channels))
-            tf_train_labels = tf.placeholder(tf.float32, shape=(self.batch_size, self.num_labels))
-            tf_valid_dataset = tf.constant(self.validation_set)
+            self.tf_X = tf.placeholder(tf.float32, shape=(self.batch_size, self.image_size, self.num_channels),
+                                       name="asd")
+            self.tf_y = tf.placeholder(tf.float32, shape=(self.batch_size, self.num_labels), name="dsa")
 
-            # Convolution variables
-            # [filter_width, in_channels, out_channels]
+            conv_weight_layer1 = tf.get_variable("conv_weight_layer1", shape=[self.patch_size, self.num_channels, 16],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            conv_biases_layer1 = tf.Variable(tf.zeros([16]), name="conv_biases_layer1")
+            conv_weight_layer2 = tf.get_variable("conv_weight_layer2", shape=[self.patch_size, 16, 32],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            conv_biases_layer2 = tf.Variable(tf.zeros([32]), name="conv_biases_layer2")
+            conv_weight_layer3 = tf.get_variable("conv_weight_layer3", shape=[self.patch_size, 32, 64],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            conv_biases_layer3 = tf.Variable(tf.zeros([64]), name="conv_biases_layer3")
+            conv_weight_layer4 = tf.get_variable("conv_weight_layer4", shape=[self.patch_size, 64, 128],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            conv_biases_layer4 = tf.Variable(tf.zeros([128]), name="conv_biases_layer4")
+            conv_weight_layer5 = tf.get_variable("conv_weight_layer5", shape=[self.patch_size, 128, 256],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            conv_biases_layer5 = tf.Variable(tf.zeros([256]), name="conv_biases_layer5")
+            conv_weight_layer6 = tf.get_variable("conv_weight_layer6", shape=[self.patch_size, 256, 512],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            conv_biases_layer6 = tf.Variable(tf.zeros([512]), name="conv_biases_layer6")
+            conv_weight_layer7 = tf.get_variable("conv_weight_layer7", shape=[self.patch_size, 512, 1024],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            conv_biases_layer7 = tf.Variable(tf.zeros([1024]), name="conv_biases_layer7")
+            conv_weight_layer8 = tf.get_variable("conv_weight_layer8", shape=[self.patch_size, 1024, 2048],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            conv_biases_layer8 = tf.Variable(tf.constant(1.0, shape=[2048]), name="conv_biases_layer8")
 
-
-            layer1_weights = tf.get_variable("layer1_weights", shape=[self.patch_size, self.num_channels, 16],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer1_biases = tf.Variable(tf.zeros([16]))
-            layer2_weights = tf.get_variable("layer2_weights", shape=[self.patch_size, 16, 32],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer2_biases = tf.Variable(tf.zeros([32]))
-            layer3_weights = tf.get_variable("layer3_weights", shape=[self.patch_size, 32, 64],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer3_biases = tf.Variable(tf.zeros([64]))
-            layer4_weights = tf.get_variable("layer4_weights", shape=[self.patch_size, 64, 128],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer4_biases = tf.Variable(tf.constant(1.0, shape=[128]))
-
-            layer5_weights = tf.get_variable("layer5_weights", shape=[self.patch_size, 128, 256],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer5_biases = tf.Variable(tf.zeros([256]))
-            layer6_weights = tf.get_variable("layer6_weights", shape=[self.patch_size, 256, 512],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer6_biases = tf.Variable(tf.zeros([512]))
-            layer7_weights = tf.get_variable("layer7_weights", shape=[self.patch_size, 512, 1024],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer7_biases = tf.Variable(tf.zeros([1024]))
-            layer8_weights = tf.get_variable("layer8_weights", shape=[self.patch_size, 1024, 2048],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer8_biases = tf.Variable(tf.constant(1.0, shape=[2048]))
-#            layer9_weights = tf.Variable(tf.truncated_normal(
-#                [self.patch_size, 2048, 4096], stddev=0.1))
-#            layer9_biases = tf.Variable(tf.zeros([4096]))
-#            layer10_weights = tf.Variable(tf.truncated_normal(
-#                [self.patch_size, 4096, 8192], stddev=0.1))
-#            layer10_biases = tf.Variable(tf.zeros([8192]))
-
-            # DNN variables
-            layer14_weights = tf.get_variable("layer14_weights", shape=[512 * 2048, 200],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer14_biases = tf.Variable(tf.constant(1.0, shape=[200]))
-            layer15_weights = tf.get_variable("layer15_weights", shape=[200, 200],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer15_biases = tf.Variable(tf.constant(1.0, shape=[200]))
-            layer16_weights = tf.get_variable("layer16_weights", shape=[200, self.num_labels],
-                initializer=tf.contrib.layers.xavier_initializer())
-            layer16_biases = tf.Variable(tf.constant(1.0, shape=[self.num_labels]))
-
-            def model(data):
-                # Convolutions
-                conv = tf.nn.conv1d(data, layer1_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer1_biases)
-                conv = tf.nn.conv1d(hidden, layer2_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer2_biases)
-                conv = tf.nn.conv1d(hidden, layer3_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer3_biases)
-                conv = tf.nn.conv1d(hidden, layer4_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer4_biases)
-                conv = tf.nn.conv1d(hidden, layer5_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer5_biases)
-                conv = tf.nn.conv1d(hidden, layer6_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer6_biases)
-                conv = tf.nn.conv1d(hidden, layer7_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer7_biases)
-                conv = tf.nn.conv1d(hidden, layer8_weights, 2, padding='SAME')
-                hidden = tf.nn.relu(conv + layer8_biases)
-#                conv = tf.nn.conv1d(hidden, layer9_weights, 2, padding='SAME')
-#                hidden = tf.nn.relu(conv + layer9_biases)
-#                conv = tf.nn.conv1d(hidden, layer10_weights, 2, padding='SAME')
-#                hidden = tf.nn.relu(conv + layer10_biases)
-
-                # DNN
-                shape = hidden.get_shape().as_list()
-                reshape = tf.reshape(hidden, [shape[0], shape[1] * shape[2]])
-                hidden = tf.nn.relu(tf.matmul(reshape, layer14_weights) + layer14_biases)
-                hidden = tf.nn.relu(tf.matmul(hidden, layer15_weights) + layer15_biases)
-                return tf.matmul(hidden, layer16_weights) + layer16_biases
+            dnn_weight_layer9 = tf.get_variable("dnn_weight_layer9", shape=[512 * 2048, 200],
+                                                initializer=tf.contrib.layers.xavier_initializer())
+            dnn_biases_layer9 = tf.Variable(tf.constant(1.0, shape=[200]), name="dnn_biases_layer9")
+            dnn_weight_layer10 = tf.get_variable("dnn_weight_layer10", shape=[200, 200],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            dnn_biases_layer10 = tf.Variable(tf.constant(1.0, shape=[200]), name="dnn_biases_layer10")
+            dnn_weight_layer11 = tf.get_variable("dnn_weight_layer11", shape=[200, self.num_labels],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+            dnn_biases_layer11 = tf.Variable(tf.constant(1.0, shape=[self.num_labels]), name="dnn_biases_layer11")
 
             # Training computation.
-            logits = model(tf_train_dataset)
-            loss = tf.reduce_mean(
-                tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_train_labels))
+            logits = self._model(self.tf_X)
 
-            # Learning rate
-            #global_step = tf.Variable(0, trainable=False)
-            #starting_learning_rate = 0.01
-            #learning_rate = tf.train.exponential_decay(starting_learning_rate,
-            #                                           global_step, 10, 0.96, staircase=True)
+            # Predictions for the training data set
+            self.train_prediction = tf.nn.softmax(logits)
+
+            self.loss = tf.reduce_mean(
+                tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=self.tf_y))
 
             # Optimizer.
-            optimizer = tf.train.GradientDescentOptimizer(1e-4).minimize(loss)
+            self.optimizer = tf.train.GradientDescentOptimizer(1e-4).minimize(self.loss)
 
-            # Predictions for the training, validation, and test data.
-            train_prediction = tf.nn.softmax(logits)
-            valid_prediction = tf.nn.softmax(model(tf_valid_dataset))
+    def _model(self, X):
+        # OJO QUE SI TENGO SOLO 2 CAPAS ESTO ANDA MAL
+        conv = tf.nn.conv1d(X, tf.trainable_variables()[0], 2, padding='SAME')
+        hidden = tf.nn.relu(conv + tf.trainable_variables()[1])
 
-        num_steps = 1000
+        loop_trainable_variables = tf.trainable_variables()[2:-2]
+        entre = False
+        for weight_layer, bias_layer in zip(loop_trainable_variables[0::2], loop_trainable_variables[1::2]):
+            if weight_layer.name[:4] == "conv":
+                conv = tf.nn.conv1d(hidden, weight_layer, 2, padding='SAME')
+                hidden = tf.nn.relu(conv + bias_layer)
+            else:
+                if not entre:
+                    shape = hidden.get_shape().as_list()
+                    reshape = tf.reshape(hidden, [shape[0], shape[1] * shape[2]])
+                    hidden = tf.nn.relu(tf.matmul(reshape, weight_layer) + bias_layer)
+                    entre = True
+                else:
+                    hidden = tf.nn.relu(tf.matmul(hidden, weight_layer) + bias_layer)
 
-        with tf.Session(graph=graph) as session:
-            tf.global_variables_initializer().run()
-            print("Initialized")
-            for step in range(num_steps):
-                batch_offset = (step * self.batch_size) % (len(self.training_set))
-                batch_data = self.training_set[batch_offset:(batch_offset + self.batch_size)]
-                batch_labels = self.training_labels[batch_offset:(batch_offset + self.batch_size)]
-                batch_data, batch_labels = shuffle(batch_data, batch_labels, random_state=0)
+        last_weight_layer = tf.trainable_variables()[-2]
+        last_bias_layer = tf.trainable_variables()[-1]
+        return tf.matmul(hidden, last_weight_layer) + last_bias_layer
 
-                feed_dict = {tf_train_dataset: batch_data, tf_train_labels: batch_labels}
-                _, l, predictions = session.run(
-                    [optimizer, loss, train_prediction], feed_dict=feed_dict)
-                if (step % 100 == 0):
-                    print("Minibatch loss:", l)
-                    print("Minibatch accuracy: {:01.2f} at step {}".format(
-                        self._accuracy(predictions, batch_labels),
-                        step))
-                    print("Validation accuracy: %.1f%%" % self._accuracy(
-                        valid_prediction.eval(), self.validation_labels))
+    def fit(self, X, y):
+        session = tf.Session(graph=self.graph)
+        tf.global_variables_initializer().run(session=session)
+        print("Initialized")
+        for step in range(self.epochs):
+            batch_offset = (step * self.batch_size) % (len(X))
+            batch_data = X[batch_offset:(batch_offset + self.batch_size)]
+            batch_labels = y[batch_offset:(batch_offset + self.batch_size)]
+            batch_data, batch_labels = shuffle(batch_data, batch_labels, random_state=0)
 
+            feed_dict = {self.tf_X: batch_data, self.tf_y: batch_labels}
+            _, l, predictions = session.run(
+                [self.optimizer, self.loss, self.train_prediction], feed_dict=feed_dict)
+        return self
 
-# print("Validation accuracy: {:01.2f}".format(self._accuracy(valid_prediction.eval(),
-#                                                                                self.validation_labels_reader.read(
-#                                                                                    from_index=0, to_index=1000))))
+    def predict(self, X):
+        prediction = tf.nn.softmax(self._model(X)).eval(session=session)
+        return prediction
+
+    def _accuracy(self, predictions, labels):
+        result = (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1)) / predictions.shape[0])
+        return result
+
+    def score(self, X, y):
+        predictions = self.predict(X)
+        score = self._accuracy(predictions=predictions, labels=y)
+        return score
+
 
 def main():
     RUTA_DIRECTORIO_DATOS = "datos"
@@ -217,18 +183,13 @@ def main():
     BATCH_SIZE = 10
     PATCH_SIZE = 10
 
-    conv_net = ConvolutionalNeuralNetwork(training_set=X_train,
-                                          validation_set=X_test,
-                                          test_set=[],
-                                          training_labels=y_train,
-                                          validation_labels=y_test,
-                                          test_labels=[], training_set_len=TRAINING_SET_LEN,
-                                          num_labels=NUM_LABELS,
-                                          num_channels=NUM_CHANNELS,
-                                          image_size=CANTIDAD_DE_FRAMES_A_PROCESAR,
-                                          batch_size=BATCH_SIZE, patch_size=PATCH_SIZE)
+    conv_net = CovNetClassifier(num_channels=NUM_CHANNELS, num_labels=NUM_LABELS,
+                                image_size=CANTIDAD_DE_FRAMES_A_PROCESAR, batch_size=BATCH_SIZE,
+                                patch_size=PATCH_SIZE, epochs=2)
 
-    conv_net.train()
+    conv_net.fit(X_train, y_train)
+    score = conv_net.score(X_test, y_test)
+    print(score)
 
 
 main()
