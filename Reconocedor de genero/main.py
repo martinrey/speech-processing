@@ -17,13 +17,20 @@ from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasClassifier
 from keras.layers import Convolution1D, MaxPooling1D, Dropout, Flatten
 from keras.datasets import imdb
+from sklearn.base import BaseEstimator
 
+
+class Reshape(BaseEstimator):
+    def fit(self, X, y=None):
+        return self
+    def transform(self, X, y=None):
+        return X.reshape((150, 32, 1))
 
 
 def create_model(optimizer='rmsprop', init='glorot_uniform'):
     # CREO MIS CONVOLUCIONES
     model = Sequential()
-    model.add(Convolution1D(16, 3, kernel_initializer=init, activation='relu', input_shape=(150, 32)))
+    model.add(Convolution1D(16, 3, kernel_initializer=init, activation='relu', input_shape=(32, 1)))
     model.add(Convolution1D(32, 3, kernel_initializer=init, activation='relu'))
     model.add(MaxPooling1D(pool_size=2))
     model.add(Dropout(0.25))
@@ -83,28 +90,12 @@ def main():
     # create model
     model = KerasClassifier(build_fn=create_model, verbose=0)
 
-    estimators = [("reduce_dim", PCA()), ('clf', model)]
+    estimators = [("reduce_dim", PCA(n_components=32)), ("reshaper", Reshape()), ('clf', model)]
     pipeline = Pipeline(estimators)
 
-    kfold = KFold(n_splits=5, shuffle=True)
-
-    param_grid = [
-        {
-            'reduce_dim__n_components': N_COMPONENTS,
-            'clf__optimizer': OPTIMIZERS,
-            'clf__epochs': EPOCHS,
-            'clf__batch_size': BATCHES,
-            'clf__init': INIT
-        },
-    ]
-
-    (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=100)
-
-    grid_search = GridSearchCV(estimator=pipeline, cv=kfold, param_grid=param_grid)
-    grid_result = grid_search.fit(X_train, y_train)
-    # summarize results
-    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-
+    pipeline.fit(X_train, y_train)
+    score = pipeline.score(X_train, y_train)
+    print(score)
 main()
 
 
