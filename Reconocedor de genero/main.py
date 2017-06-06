@@ -28,11 +28,11 @@ class Reshape(BaseEstimator):
         return X.reshape((X.shape[0], X.shape[1], 1))
 
 
-def create_model(optimizer='rmsprop', init='glorot_uniform'):
+def create_model(optimizer='sgd', init='glorot_uniform'):
     # CREO MIS CONVOLUCIONES
     model = Sequential()
     model.add(Convolution1D(16, 5, strides=1, padding='same', kernel_initializer=init, activation='relu',
-                            input_shape=(131072, 1)))
+                            input_shape=(64000, 1)))
     model.add(MaxPooling1D(pool_size=2))
     model.add(Convolution1D(32, 5, strides=1, padding='same', kernel_initializer=init, activation='relu'))
     model.add(MaxPooling1D(pool_size=2))
@@ -55,10 +55,31 @@ def create_model(optimizer='rmsprop', init='glorot_uniform'):
 
 
 def main():
-    RUTA_DIRECTORIO_DATOS = "../datos"
-    VENTANA_EN_SEGUNDOS = 10
+    RUTA_DIRECTORIO_DATOS = "datos"
+    VENTANA_EN_SEGUNDOS = 4
     SAMPLE_RATE = 16000
-    CANTIDAD_DE_FRAMES_A_PROCESAR = 131072
+    MINIMA_CANTIDAD_DE_FRAMES = 318764  # Es el minimo de todos en este caso
+    CANTIDAD_DE_FRAMES_A_PROCESAR = VENTANA_EN_SEGUNDOS * SAMPLE_RATE
+
+    def augument_data(dataset, labels):
+        augumented_dataset = []
+        augumented_labels = []
+
+        for data, label in zip(dataset, labels):
+            lower_bound = 0
+            upper_bound = CANTIDAD_DE_FRAMES_A_PROCESAR
+            augumented_data = []
+            # corto en 4 pedazos el audio
+            for i in range(4):
+                augumented_data.append(data[lower_bound:upper_bound])
+                augumented_labels.append(label)
+                lower_bound = upper_bound
+                upper_bound += CANTIDAD_DE_FRAMES_A_PROCESAR
+            augumented_dataset.extend(augumented_data)
+
+        augumented_dataset = np.asarray(augumented_dataset)
+        augumented_labels = np.asarray(augumented_labels)
+        return augumented_dataset, augumented_labels
 
     archivos_en_carpeta_datos = os.listdir(RUTA_DIRECTORIO_DATOS)
     archivos_wav = []
@@ -72,7 +93,7 @@ def main():
     X = []
     for archivo_wav in archivos_wav:
         data, frames, _, duration = wav.load_from_wav(RUTA_DIRECTORIO_DATOS + "/" + archivo_wav)
-        X.append(data[:CANTIDAD_DE_FRAMES_A_PROCESAR])
+        X.append(data[:MINIMA_CANTIDAD_DE_FRAMES])
 
     X = np.asarray(X)
 
@@ -84,38 +105,39 @@ def main():
             y.append(0)
     y = np.asarray(y)
 
-    X, y = shuffle(X, y, random_state=0)
-    X_train = X[:150]
-    X_test = X[150:180]
-    y_train = y[:150]
-    y_test = y[150:180]
+    X, y = shuffle(X, y, random_state=42)
+    #X_train = X[:150]
+    #X_test = X[150:180]
+    #y_train = y[:150]
+    #y_test = y[150:180]
 
-    N_COMPONENTS = [32]
-    OPTIMIZERS = ['adam']
-    EPOCHS = [100]
+    X, y = augument_data(X, y)
+
+    EPOCHS = [65]
     BATCHES = [10]
     INIT = ['glorot_uniform']
 
-    #pca = PCA(n_components=32)
-    #wtf = pca.fit_transform(X_train)
+    # pca = PCA(n_components=32)
+    # wtf = pca.fit_transform(X_train)
 
     # create model
-    model = KerasClassifier(build_fn=create_model, verbose=0)
+    model = KerasClassifier(build_fn=create_model)
 
     estimators = [("reshaper", Reshape()), ('clf', model)]
     pipeline = Pipeline(estimators)
 
     param_grid = [
         {
-            'clf__optimizer': OPTIMIZERS,
             'clf__epochs': EPOCHS,
             'clf__batch_size': BATCHES,
             'clf__init': INIT
         },
     ]
 
-    grid_search = GridSearchCV(estimator=pipeline, param_grid=param_grid)
-    grid_result = grid_search.fit(X_train, y_train)
+    kfold = KFold(n_splits=5, shuffle=True)
+
+    grid_search = GridSearchCV(estimator=pipeline, cv=kfold, param_grid=param_grid)
+    grid_result = grid_search.fit(X, y)
     # summarize results
     print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
 
