@@ -16,7 +16,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasClassifier
 from keras.layers import Convolution1D, MaxPooling1D, Dropout, Flatten
-from keras.datasets import imdb
+from keras.optimizers import SGD
 from sklearn.base import BaseEstimator
 
 
@@ -28,11 +28,13 @@ class Reshape(BaseEstimator):
         return X.reshape((X.shape[0], X.shape[1], 1))
 
 
-def create_model(optimizer='sgd', init='glorot_uniform'):
+def create_model(learning_rate=0.01, momentum=0, init='glorot_uniform'):
     # CREO MIS CONVOLUCIONES
     model = Sequential()
-    model.add(Convolution1D(16, 5, strides=1, padding='same', kernel_initializer=init, activation='relu',
+    model.add(Convolution1D(8, 5, strides=1, padding='same', kernel_initializer=init, activation='relu',
                             input_shape=(64000, 1)))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Convolution1D(16, 5, strides=1, padding='same', kernel_initializer=init, activation='relu'))
     model.add(MaxPooling1D(pool_size=2))
     model.add(Convolution1D(32, 5, strides=1, padding='same', kernel_initializer=init, activation='relu'))
     model.add(MaxPooling1D(pool_size=2))
@@ -40,16 +42,14 @@ def create_model(optimizer='sgd', init='glorot_uniform'):
     model.add(MaxPooling1D(pool_size=2))
     model.add(Convolution1D(128, 5, strides=1, padding='same', kernel_initializer=init, activation='relu'))
     model.add(MaxPooling1D(pool_size=2))
-    model.add(Convolution1D(256, 5, strides=1, padding='same', kernel_initializer=init, activation='relu'))
-    model.add(MaxPooling1D(pool_size=2))
     model.add(Dropout(0.25))
     model.add(Flatten())
-    model.add(Dense(512, kernel_initializer=init, activation='relu'))
     model.add(Dense(256, kernel_initializer=init, activation='relu'))
-    model.add(Dense(128, kernel_initializer=init, activation='relu'))
+    model.add(Dense(256, kernel_initializer=init, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='sigmoid'))
     # Compile model
+    optimizer = SGD(lr=learning_rate, momentum=momentum)
     model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
     return model
 
@@ -59,7 +59,8 @@ def main():
     VENTANA_EN_SEGUNDOS = 4
     SAMPLE_RATE = 16000
     MINIMA_CANTIDAD_DE_FRAMES = 318764  # Es el minimo de todos en este caso
-    CANTIDAD_DE_FRAMES_A_PROCESAR = VENTANA_EN_SEGUNDOS * SAMPLE_RATE
+    #CANTIDAD_DE_FRAMES_A_PROCESAR = VENTANA_EN_SEGUNDOS * SAMPLE_RATE
+    CANTIDAD_DE_FRAMES_A_PROCESAR = 17303
 
     def augument_data(dataset, labels):
         augumented_dataset = []
@@ -113,8 +114,16 @@ def main():
 
     X, y = augument_data(X, y)
 
-    EPOCHS = [65]
-    BATCHES = [10]
+    #LEARNING_RATE = [0.0001, 0.001, 0.01, 0.1]
+    #MOMENTUM = [0.5, 0.7, 0.9]
+    #EPOCHS = [1000]
+    #BATCHES = [10, 20]
+    #INIT = ['glorot_uniform']
+
+    LEARNING_RATE = [0.0001]
+    MOMENTUM = [0.7]
+    EPOCHS = [2000]
+    BATCHES = [20]
     INIT = ['glorot_uniform']
 
     # pca = PCA(n_components=32)
@@ -122,7 +131,6 @@ def main():
 
     # create model
     model = KerasClassifier(build_fn=create_model)
-
     estimators = [("reshaper", Reshape()), ('clf', model)]
     pipeline = Pipeline(estimators)
 
@@ -130,16 +138,18 @@ def main():
         {
             'clf__epochs': EPOCHS,
             'clf__batch_size': BATCHES,
-            'clf__init': INIT
+            'clf__init': INIT,
+            'clf__momentum': MOMENTUM,
+            'clf__learning_rate': LEARNING_RATE,
         },
     ]
 
-    kfold = KFold(n_splits=5, shuffle=True)
+    #kfold = KFold(n_splits=5, shuffle=True)
 
-    grid_search = GridSearchCV(estimator=pipeline, cv=kfold, param_grid=param_grid)
+    grid_search = GridSearchCV(estimator=pipeline, cv=None, param_grid=param_grid)
     grid_result = grid_search.fit(X, y)
     # summarize results
     print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-
-
+    grid_search.best_estimator_.named_steps['clf'].model.save('model.h5')
+    grid_search.best_estimator_.named_steps['clf'].model.save_weights('model_weights.h5')
 main()
