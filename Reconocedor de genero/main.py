@@ -1,17 +1,10 @@
 import os
-import wav
+import arff
+
 import numpy as np
-import tensorflow as tf
-from sklearn.decomposition import PCA
-from sklearn.utils import shuffle
+from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-from sklearn.model_selection import cross_val_score, KFold, GridSearchCV
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.decomposition import PCA
-from sklearn.linear_model import SGDClassifier
-from sklearn.utils import shuffle
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasClassifier
@@ -32,7 +25,7 @@ def create_model(learning_rate=0.01, momentum=0, init='glorot_uniform'):
     # CREO MIS CONVOLUCIONES
     model = Sequential()
     model.add(Convolution1D(8, 5, strides=1, padding='same', kernel_initializer=init, activation='relu',
-                            input_shape=(64000, 1)))
+                            input_shape=(1584, 1)))
     model.add(MaxPooling1D(pool_size=2))
     model.add(Convolution1D(16, 5, strides=1, padding='same', kernel_initializer=init, activation='relu'))
     model.add(MaxPooling1D(pool_size=2))
@@ -55,79 +48,36 @@ def create_model(learning_rate=0.01, momentum=0, init='glorot_uniform'):
 
 
 def main():
-    RUTA_DIRECTORIO_DATOS = "datos"
-    VENTANA_EN_SEGUNDOS = 4
-    SAMPLE_RATE = 16000
-    MINIMA_CANTIDAD_DE_FRAMES = 318764  # Es el minimo de todos en este caso
-    #CANTIDAD_DE_FRAMES_A_PROCESAR = VENTANA_EN_SEGUNDOS * SAMPLE_RATE
-    CANTIDAD_DE_FRAMES_A_PROCESAR = 17303
-
-    def augument_data(dataset, labels):
-        augumented_dataset = []
-        augumented_labels = []
-
-        for data, label in zip(dataset, labels):
-            lower_bound = 0
-            upper_bound = CANTIDAD_DE_FRAMES_A_PROCESAR
-            augumented_data = []
-            # corto en 4 pedazos el audio
-            for i in range(4):
-                augumented_data.append(data[lower_bound:upper_bound])
-                augumented_labels.append(label)
-                lower_bound = upper_bound
-                upper_bound += CANTIDAD_DE_FRAMES_A_PROCESAR
-            augumented_dataset.extend(augumented_data)
-
-        augumented_dataset = np.asarray(augumented_dataset)
-        augumented_labels = np.asarray(augumented_labels)
-        return augumented_dataset, augumented_labels
+    RUTA_DIRECTORIO_DATOS = "mfccs"
 
     archivos_en_carpeta_datos = os.listdir(RUTA_DIRECTORIO_DATOS)
-    archivos_wav = []
-    archivos_ipu = []
+    archivos_mfcc = []
     for archivo in archivos_en_carpeta_datos:
-        if (archivo[-3:] == "ipu"):
-            archivos_ipu.append(archivo)
-        elif (archivo[-3:] == "wav"):
-            archivos_wav.append(archivo)
+        archivos_mfcc.append(archivo)
 
     X = []
-    for archivo_wav in archivos_wav:
-        data, frames, _, duration = wav.load_from_wav(RUTA_DIRECTORIO_DATOS + "/" + archivo_wav)
-        X.append(data[:MINIMA_CANTIDAD_DE_FRAMES])
-
-    X = np.asarray(X)
-
     y = []
-    for archivo_wav in archivos_wav:
-        if archivo_wav[3] == "m":
-            y.append(1)
-        elif archivo_wav[3] == "f":
-            y.append(0)
-    y = np.asarray(y)
 
-    X, y = shuffle(X, y, random_state=42)
-    #X_train = X[:150]
-    #X_test = X[150:180]
-    #y_train = y[:150]
-    #y_test = y[150:180]
+    for mfcc in archivos_mfcc:
+        data = arff.load(open('mfccs/'+ str(mfcc)))
+        X.append(np.array(data["data"][0]))
+        y.append(0 if mfcc[3] == "m" else 1)
 
-    X, y = augument_data(X, y)
+    X = np.array(X)
+    y = np.array(y)
 
-    #LEARNING_RATE = [0.0001, 0.001, 0.01, 0.1]
-    #MOMENTUM = [0.5, 0.7, 0.9]
-    #EPOCHS = [1000]
-    #BATCHES = [10, 20]
-    #INIT = ['glorot_uniform']
+    # Limpio los datos
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+            X[i][j] = 0.0 if str(X[i][j]) == "None" or str(X[i][j]) == "unknown" else float(X[i][j])
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     LEARNING_RATE = [0.0001]
     MOMENTUM = [0.7]
-    EPOCHS = [2000]
+    EPOCHS = [200]
     BATCHES = [20]
     INIT = ['glorot_uniform']
-
-    # pca = PCA(n_components=32)
-    # wtf = pca.fit_transform(X_train)
 
     # create model
     model = KerasClassifier(build_fn=create_model)
@@ -147,7 +97,8 @@ def main():
     #kfold = KFold(n_splits=5, shuffle=True)
 
     grid_search = GridSearchCV(estimator=pipeline, cv=None, param_grid=param_grid)
-    grid_result = grid_search.fit(X, y)
+    grid_result = grid_search.fit(X_train, y_train)
+
     # summarize results
     print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
     grid_search.best_estimator_.named_steps['clf'].model.save('model.h5')
