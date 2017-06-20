@@ -6,5 +6,5 @@ class OmdbGateway(object):
         self.url = url + '?apikey=' + token
 
     def movie(self, movie):
-        uri = self.url + "?t=" + movie
+        uri = self.url + "&t=" + movie
         return requests.get(uri).json()
