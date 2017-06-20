@@ -134,7 +134,15 @@ def listen_for_speech(threshold=2500, num_phrases=-1):
     return response
 
 def resolver_pedido(pedido):
-    pass
+    if(pedido[1] == "actores"):
+        pass
+    else if(pedido[1] == "duración" or pedido[1] == "duracion"):
+        pass
+    else if(pedido[1] == "genero" or pedido[1] == "género"):
+        pass
+
+def transformar_pedido(pedido):
+    return pedido["results"][0]["alternatives"][0]["transcript"]
 
 def main():
     fin = False
@@ -142,10 +150,10 @@ def main():
         text_to_speech("pregunta_maquina.wav", "Diga lo que desea buscar", rate_change="+0%", f0mean_change="+0%")
         os.system("play pregunta_maquina.wav")
         record()
-        pedido_usuario = speech_to_text("pedido_usuario.wav")
+        pedido_usuario = speech_to_text("pedido_usuario.wav".encode('utf-8'))
+        pedido_usuario = transformar_pedido(pedido_usuario)
 
-        print(pedido_usuario)
-        # respuesta_pedido = resolver_pedido(pedido_usuario)
+        respuesta_pedido = resolver_pedido(pedido_usuario)
         #
         # text_to_speech("respuesta_pedido.wav", respuesta_pedido, rate_change="+0%", f0mean_change="+0%")
         # os.system("play respuesta_pedido.wav")
