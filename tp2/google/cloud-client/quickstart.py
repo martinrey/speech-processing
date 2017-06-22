@@ -1,24 +1,49 @@
 #!/usr/bin/env python
+import wave
 
-# Copyright 2016 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+import pyaudio
+
+CHUNK = 1024
+FORMAT = pyaudio.paInt16  # paInt8
+CHANNELS = 1
+RATE = 16000  # sample rate
+RECORD_SECONDS = 5
+WAVE_OUTPUT_FILENAME = "pedido_usuario.wav"
+
+
+def record():
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK)  # buffer
+
+    print("* recording")
+
+    frames = []
+
+    for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+        data = stream.read(CHUNK)
+        frames.append(data)  # 2 bytes(16 bits) per channel
+
+    print("* done recording")
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
+    wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+    wf.setnchannels(CHANNELS)
+    wf.setsampwidth(p.get_sample_size(FORMAT))
+    wf.setframerate(RATE)
+    wf.writeframes(b''.join(frames))
+    wf.close()
 
 
 def run_quickstart():
-    # [START speech_quickstart]
     import io
-    import os
 
     # Imports the Google Cloud client library
     from google.cloud import speech
@@ -27,10 +52,7 @@ def run_quickstart():
     speech_client = speech.Client()
 
     # The name of the audio file to transcribe
-    file_name = os.path.join(
-        os.path.dirname(__file__),
-        'resources',
-        'audio2.raw')
+    file_name = "pedido_usuario.wav"
 
     # Loads the audio into memory
     with io.open(file_name, 'rb') as audio_file:
@@ -42,12 +64,11 @@ def run_quickstart():
             sample_rate_hertz=16000)
 
     # Detects speech in the audio file
-    alternatives = sample.recognize('en-US')
+    alternatives = sample.recognize('es-AR')
 
     for alternative in alternatives:
         print('Transcript: {}'.format(alternative.transcript))
-    # [END speech_quickstart]
-
 
 if __name__ == '__main__':
+    #record()
     run_quickstart()
