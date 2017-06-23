@@ -70,5 +70,5 @@ def run_quickstart():
         print('Transcript: {}'.format(alternative.transcript))
 
 if __name__ == '__main__':
-    #record()
+    record()
     run_quickstart()
