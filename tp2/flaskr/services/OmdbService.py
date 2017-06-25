@@ -11,6 +11,7 @@ class OmdbService(object):
 
     def actors(self, movie):
         movie_json = self.omdb_gateway.movie(movie=movie)
+        print(movie_json)
         return movie_json['Actors']
 
     def plot(self, movie):
@@ -20,6 +21,14 @@ class OmdbService(object):
     def language(self, movie):
         movie_json = self.omdb_gateway.movie(movie=movie)
         return movie_json['Language']
+
+    def anio(self, movie):
+        movie_json = self.omdb_gateway.movie(movie=movie)
+        return movie_json['Year']
+
+    def duracion(self, movie):
+        movie_json = self.omdb_gateway.movie(movie=movie)
+        return movie_json['Runtime']
 
     def awards(self, movie):
         movie_json = self.omdb_gateway.movie(movie=movie)
