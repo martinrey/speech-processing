@@ -1,9 +1,9 @@
 import logging
 
 from flask import Flask, render_template
-
-from spoken_dialog_system.AutomaticSpeechRecognition import AutomaticSpeechRecognition
-from spoken_dialog_system.TextToSpeech import TextToSpeech
+from flaskr.services.RecorderService import RecorderService
+from flaskr.spoken_dialog_system.AutomaticSpeechRecognition import AutomaticSpeechRecognition
+from flaskr.spoken_dialog_system.TextToSpeech import TextToSpeech
 
 app = Flask(__name__)
 
@@ -14,9 +14,11 @@ def hello():
     recorder_service.record()
     asr = AutomaticSpeechRecognition()
     tts = TextToSpeech()
-    tts.speak("prueba.wav", "quiero genero fargo", rate_change="+0%", f0mean_change="+0%")
 
     alternatives = asr.recognize(audio_file_name="pedido_usuario.wav")
+    for alternative in alternatives:
+        tts.speak("prueba.wav", alternative.transcript, rate_change="+0%", f0mean_change="+0%")
+
     return render_template('main.html', alternatives=alternatives)
 
 

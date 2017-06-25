@@ -41,3 +41,9 @@ class Recorder(object):
         wf.setframerate(self.RATE)
         wf.writeframes(b''.join(frames))
         wf.close()
+
+    def play(self):
+        data = self.wf.readframes(self.chunk)
+        while data != '':
+            self.stream.write(data)
+            data = self.wf.readframes(self.chunk)
