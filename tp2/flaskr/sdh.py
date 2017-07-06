@@ -143,7 +143,7 @@ def main():
                 tipo_info = speech_to_text("usuario_tipo_info.wav".encode('utf-8'))
                 tipo_info = transformar_pedido(tipo_info)
 
-                rta = Parser.parse(pelicula, "género")
+                rta = Parser.parse(pelicula, tipo_info)
 
                 text_to_speech("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
                 os.system("play maquina_respuesta_consulta.wav")
