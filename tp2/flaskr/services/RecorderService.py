@@ -1,4 +1,4 @@
-from flaskr.recorder.Recorder import Recorder
+from recorder.Recorder import Recorder
 
 
 class RecorderService(object):
