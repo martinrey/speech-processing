@@ -58,13 +58,18 @@ def record(output):
 
 
 def transformar_pedido(pedido):
-    return pedido["results"][0]["alternatives"][0]["transcript"]
+    return str(pedido["results"][0]["alternatives"][0]["transcript"]).strip()
 
 
 def main():
     fin = False
+    #text_to_speech("pregunta_maquina_intro.wav", "Buenos días, bienvenidos al trabajo " +
+                    #"práctico número dos de la materia, procesamiento del habla. En este sistema usted podrá reservar entradas de cine para una película, y también podrá obtener información de una película en particular"
+                    #, rate_change="+0%", f0mean_change="+0%")
+    os.system("play sounds/pregunta_maquina_intro.wav")
+
     while (not fin):
-        # text_to_speech("pregunta_maquina_inicial.wav", "Buenos Días, ¿Desea obtener información de una película, o bien, reservar una película?", rate_change="+0%", f0mean_change="+0%")
+        #text_to_speech("pregunta_maquina_inicial.wav", "¿Desea obtener información de una película, o bien, reservar entradas de cine? En caso de no querer nada, simplemente diga la palabra nada", rate_change="+0%", f0mean_change="+0%")
         os.system("play sounds/pregunta_maquina_inicial.wav")
 
         record("pedido_usuario_incial.wav")
@@ -72,10 +77,13 @@ def main():
         pedido_usuario = speech_to_text("pedido_usuario_incial.wav".encode('utf-8'))
         pedido_usuario = transformar_pedido(pedido_usuario)
 
+        print(pedido_usuario)
+
         if("reservar" in pedido_usuario or "reserva" in pedido_usuario):
+
             ########### PELICULAS ###################
-            # text_to_speech("pregunta_maquina_pelicula.wav", "Las películas actualmente en cartelera son: El círculo, la momia, mi villano favorito tres, mujer maravilla y el hombre araña. Por favor elija una o bien diga la palabra repetir para escuchar nuevamente las opciones",
-                            # rate_change="+0%", f0mean_change="+0%")
+            #text_to_speech("pregunta_maquina_pelicula.wav", "Las películas actualmente en cartelera son: El círculo, la momia, mi villano favorito tres, y, mujer maravilla. Por favor elija una o bien diga la palabra repetir para escuchar nuevamente las opciones",
+                             #rate_change="+0%", f0mean_change="+0%")
             repetir = True
             while(repetir):
                 os.system("play sounds/pregunta_maquina_pelicula.wav")
@@ -83,46 +91,103 @@ def main():
                 pelicula = speech_to_text("pelicula.wav".encode('utf-8'))
                 pelicula = transformar_pedido(pelicula)
 
-                if("repetir" not in pelicula):
+                print(pelicula)
+
+                if("repetir" in pelicula):
+                    repetir = True
+                elif (not ((pelicula == "el círculo") or (pelicula == "la momia") or (pelicula == "mi villano favorito tres") or (pelicula == "mujer maravilla"))):
+                    #text_to_speech("error_pelicula_reserva.wav", "Lo siento, no he comprendido, o la película que nombró no se encuentra en cartelera. Por favor diga el nombre exacto de alguna de las películas en cartelera",
+                                     #rate_change="+0%", f0mean_change="+0%")
+                    os.system("play sounds/error_pelicula_reserva.wav")
+                else:
                     repetir = False
-            ########### CINES ###################
-            # text_to_speech("pregunta_maquina_cines.wav", "Listo, Los cines disponibles para la pelicula " +str(pelicula)+ " son: Cinemark caballito, joyts abasto, y vilash recoleta. Por favor elija uno o bien diga repetir",
-                            # rate_change="+0%", f0mean_change="+0%")
+
+
+            ########### FECHAS ###################
+            text_to_speech("pregunta_maquina_fechas.wav", "Las fechas disponibles para la película " +str(pelicula)+ " son: lunes diez de julio, miércoles doce de julio, o, jueves trece de julio. Por favor elija una o bien diga repetir",
+                            rate_change="+0%", f0mean_change="+0%")
             repetir = True
 
             while(repetir):
-                os.system("play sounds/pregunta_maquina_cines.wav")
-                record("cines.wav")
-                cines = speech_to_text("cines.wav".encode('utf-8'))
-                cines = transformar_pedido(cines)
+                os.system("play pregunta_maquina_fechas.wav")
+                record("fechas.wav")
+                fecha = speech_to_text("fechas.wav".encode('utf-8'))
+                fecha = transformar_pedido(fecha)
 
-                if("repetir" not in cines):
-                    print("Fin cines")
+                print(fecha)
+
+                if("repetir" in fecha):
+                    repetir = True
+                elif(fecha not in ["lunes diez de julio", "miércoles doce de julio", "jueves trece de julio"]):
+                    #text_to_speech("error_fecha_reserva.wav", "Lo siento, no he comprendido, o la fecha que usted eligió no es correcta. Por favor diga la fecha exacta de alguna de las siguientes",
+                                    #rate_change="+0%", f0mean_change="+0%")
+                    os.system("play sounds/error_fecha_reserva.wav")
+                else:
                     repetir = False
-            ########### HORARIOS ###################
-            # text_to_speech("pregunta_maquina_horarios.wav", "Perfecto, los horarios disponibles en ese cine son: tres y media, cuatro y media, o, diez y cuarto. Elija uno o bien diga repetir",
-                            # rate_change="+0%", f0mean_change="+0%")
-            repetir = True
+            ########### CINES ###################
+            #
+            # text_to_speech("pregunta_maquina_cines_1.wav", "Listo, ahora necesito saber en que cine desea ver la película",
+            #                  rate_change="+0%", f0mean_change="+0%")
+            # os.system("play pregunta_maquina_cines_1.wav")
+            #
+            # text_to_speech("pregunta_maquina_cines_2.wav", "Los cines disponibles para la pelicula " +str(pelicula)+ ", el día " + str(fecha) + ", son: cinemark, atlas, y dot. Por favor elija uno o bien diga repetir",
+            #                  rate_change="+0%", f0mean_change="+0%")
+            # repetir = True
+            #
+            # while(repetir):
+            #     os.system("play pregunta_maquina_cines_2.wav")
+            #     record("cines.wav")
+            #     cines = speech_to_text("cines.wav".encode('utf-8'))
+            #     cines = transformar_pedido(cines)
+            #     print(cines)
+            #     if("repetir" not in cines and cines in ["cinemark","atlas","cine mark", "dot"]):
+            #         repetir = False
+            #     else:
+            #         text_to_speech("error_cine_reserva.wav", "Lo siento, el cine que usted eligió no es correcto. Por favor nombre alguno de las siguientes",
+            #                         rate_change="+0%", f0mean_change="+0%")
+            #         os.system("play error_cine_reserva.wav")
 
+            ########### HORARIOS ###################
+            #text_to_speech("pregunta_maquina_horarios.wav", "Los horarios disponibles para ese cine son: tres y media, cuatro y media, o, diez y cuarto. Elija uno, o bien diga repetir",
+                            #rate_change="+0%", f0mean_change="+0%")
+            repetir = True
             while(repetir):
                 os.system("play sounds/pregunta_maquina_horarios.wav")
                 record("horario.wav")
                 horario = speech_to_text("horario.wav".encode('utf-8'))
                 horario = transformar_pedido(horario)
 
-                if("repetir" not in horario):
-                    print("Fin Horario")
+                print(horario)
+
+                if("repetir" in horario):
+                    pass
+                elif(horario not in ["tres y media", "cuatro y media", "diez y cuarto"]):
+                    #text_to_speech("error_horario_reserva.wav", "Lo siento, el horario que usted eligó no es correcto. Por favor diga exactamente alguno de los siguientes horarios.",
+                                    #rate_change="+0%", f0mean_change="+0%")
+                    os.system("play sounds/error_horario_reserva.wav")
+                else:
                     repetir = False
+
             ########### BUTACAS ###################
-            # text_to_speech("pregunta_maquina_butaca.wav", "Finalmente diga un número de butaca del uno al quince",
-                            # rate_change="+0%", f0mean_change="+0%")
-            os.system("play sounds/pregunta_maquina_butaca.wav")
-            record("butaca.wav")
-            butaca = speech_to_text("butaca.wav".encode('utf-8'))
-            butaca = transformar_pedido(butaca)
+            #text_to_speech("pregunta_maquina_butaca.wav", "Por favor, diga un número de butaca del uno al quince",
+                            #rate_change="+0%", f0mean_change="+0%")
+            repetir = True
+            while(repetir):
+                os.system("play sounds/pregunta_maquina_butaca.wav")
+                record("butaca.wav")
+                butaca = speech_to_text("butaca.wav".encode('utf-8'))
+                butaca = transformar_pedido(butaca)
+
+                print(butaca)
+
+                if(butaca not in ["uno","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince"]):
+                        #text_to_speech("error_butaca_reserva.wav", "Lo siento, no he comprendido", rate_change="+0%", f0mean_change="+0%")
+                        os.system("play sounds/error_butaca_reserva.wav")
+                else:
+                    repetir = False
 
             ######### FIN #######################
-            text_to_speech("fin_reserva.wav", "Su reserva para la película " + str(pelicula) + " en el cine " + str(cines) + " a las " +str(horario) + " en la butaca número " +str(butaca) + " ha sido realizada con éxito",
+            text_to_speech("fin_reserva.wav", "Su reserva para la película " + str(pelicula) + " en el cine  el día " + str(fecha) + " a las " +str(horario) + " en la butaca número " +str(butaca) + " ha sido realizada con éxito",
                             rate_change="+0%", f0mean_change="+0%")
             os.system("play fin_reserva.wav")
 
@@ -152,6 +217,4 @@ def main():
             fin = True
             # text_to_speech("chau.wav", "Muchas gracias por utilizar nuestros servicios, hasta luego", rate_change="+0%", f0mean_change="+0%")
             os.system("play sounds/chau.wav")
-
-
 main()
