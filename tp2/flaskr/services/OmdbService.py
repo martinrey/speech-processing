@@ -2,7 +2,7 @@ class OmdbService(object):
     def __init__(self, omdb_gateway):
         self.omdb_gateway = omdb_gateway
 
-    def all(self, movie):
+    def movie(self, movie):
         return self.omdb_gateway.movie(movie=movie)
 
     def genre(self, movie):

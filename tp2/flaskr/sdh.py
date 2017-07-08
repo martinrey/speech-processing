@@ -19,8 +19,12 @@ RATE = 44100  # sample rate
 RECORD_SECONDS = 5
 # WAVE_OUTPUT_FILENAME = "pedido_usuario.wav"
 
-omdb_gateway = OmdbGateway()
-omdb_service = OmdbService(omdb_gateway=omdb_gateway)
+#########
+parser = Parser()
+gateway = OmdbGateway()
+service = OmdbService(gateway)
+INFORMACION_DISPONIBLE = ["actores", "géner", "año", "duracion", "argumento", "idioma", "premios", "poster", "rating", "productor"]
+#########
 
 stt = SpeechToTextV1(username='6f01e8bb-2faa-42a6-bec3-c1e236337b05', password='wRfZa13pn5Ke')
 tts = TextToSpeechV1(username='823bf474-b3a1-454c-9daa-f39f1fe7fba8', password='UgSusuE0f3PZ')
@@ -60,17 +64,24 @@ def record(output):
 def transformar_pedido(pedido):
     return str(pedido["results"][0]["alternatives"][0]["transcript"]).strip()
 
+# GENERALIZARLO EN UN ERROR HANDLER
+def movie_not_found(json):
+    if("Error" in json):
+        return True
+    else:
+        return False
+
 
 def main():
     fin = False
     #text_to_speech("pregunta_maquina_intro.wav", "Buenos días, bienvenidos al trabajo " +
                     #"práctico número dos de la materia, procesamiento del habla. En este sistema usted podrá reservar entradas de cine para una película, y también podrá obtener información de una película en particular"
                     #, rate_change="+0%", f0mean_change="+0%")
-    os.system("play sounds/pregunta_maquina_intro.wav")
+    #os.system("play sounds/pregunta_maquina_intro.wav")
 
     while (not fin):
         #text_to_speech("pregunta_maquina_inicial.wav", "¿Desea obtener información de una película, o bien, reservar entradas de cine? En caso de no querer nada, simplemente diga la palabra nada", rate_change="+0%", f0mean_change="+0%")
-        os.system("play sounds/pregunta_maquina_inicial.wav")
+        #os.system("play sounds/pregunta_maquina_inicial.wav")
 
         record("pedido_usuario_incial.wav")
 
@@ -192,24 +203,44 @@ def main():
             os.system("play fin_reserva.wav")
 
         elif("información" in pedido_usuario):
-                # text_to_speech("pregunta_maquina_informacion.wav", "¿Sobre qué película desea obtener información?", rate_change="+0%", f0mean_change="+0%")
-                os.system("play sounds/pregunta_maquina_informacion.wav")
+                no_encontre_la_pelicula = True
+                while(no_encontre_la_pelicula):
+                    # text_to_speech("pregunta_maquina_informacion.wav", "¿Sobre qué película desea obtener información?", rate_change="+0%", f0mean_change="+0%")
+                    os.system("play sounds/pregunta_maquina_informacion.wav")
 
-                record("pelicula_info.wav")
-                pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
-                pelicula = transformar_pedido(pelicula)
+                    record("pelicula_info.wav")
+                    pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
+                    pelicula = transformar_pedido(pelicula)
+                    print(pelicula)
 
-                pregunta = "¿Que información desea buscar sobre la pelicula " + str(pelicula)
-                text_to_speech("pregunta_maquina_tipo_info.wav", pregunta, rate_change="+0%", f0mean_change="+0%")
+                    json = service.movie(pelicula)
 
-                os.system("play pregunta_maquina_tipo_info.wav")
+                    if movie_not_found(json=json):
+                        #text_to_speech("error_pelicula_no_encontrada.wav", "Disculpe, no pudimos encontrar la pelicula", rate_change="+0%", f0mean_change="+0%")
+                        os.system("play sounds/error_pelicula_no_encontrada.wav")
+                    else:
+                        no_encontre_la_pelicula = False
 
-                record("usuario_tipo_info.wav")
-                tipo_info = speech_to_text("usuario_tipo_info.wav".encode('utf-8'))
-                tipo_info = transformar_pedido(tipo_info)
+                no_encontre_informacion = True
+                while(no_encontre_informacion):
+                    pregunta = "¿Que información desea buscar sobre la pelicula " + str(pelicula)
+                    text_to_speech("pregunta_maquina_tipo_info.wav", pregunta, rate_change="+0%", f0mean_change="+0%")
 
-                rta = Parser.parse(pelicula, tipo_info)
+                    os.system("play pregunta_maquina_tipo_info.wav")
 
+                    record("usuario_tipo_info.wav")
+                    tipo_info = speech_to_text("usuario_tipo_info.wav".encode('utf-8'))
+                    tipo_info = transformar_pedido(tipo_info)
+                    print(tipo_info)
+
+                    if not tipo_info in INFORMACION_DISPONIBLE:
+                        #text_to_speech("error_informacion_no_encontrada.wav", "Disculpe, no pudimos realizar el pedido, por favor intente nuevamente", rate_change="+0%", f0mean_change="+0%")
+                        os.system("play sounds/error_informacion_no_encontrada.wav")
+                    else:
+                        no_encontre_informacion = False
+
+
+                rta = parser.parse(pelicula, tipo_info)
                 text_to_speech("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
                 os.system("play maquina_respuesta_consulta.wav")
 
@@ -217,4 +248,8 @@ def main():
             fin = True
             # text_to_speech("chau.wav", "Muchas gracias por utilizar nuestros servicios, hasta luego", rate_change="+0%", f0mean_change="+0%")
             os.system("play sounds/chau.wav")
+
+        else:
+            #text_to_speech("error_seleccion_de_servicio.wav", "Disculpe, no entendi el comando elegido.", rate_change="+0%", f0mean_change="+0%")
+            os.system("play sounds/error_seleccion_de_servicio.wav")
 main()

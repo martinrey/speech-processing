@@ -2,7 +2,7 @@ from gateway.OmdbGateway import OmdbGateway
 from services.OmdbService import OmdbService
 
 class Parser(object):
-    def parse(pelicula, tipo_info):
+    def parse(self, pelicula, tipo_info):
         """ Parsea y devuelve el texto correspondiente a la consulta realizada """
 
         gateway = OmdbGateway()
