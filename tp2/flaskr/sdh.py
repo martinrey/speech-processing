@@ -15,28 +15,26 @@ from watson_developer_cloud import SpeechToTextV1, TextToSpeechV1
 import sounddevice as sd
 import soundfile as sf
 
+from spoken_dialog_system.AutomaticSpeechRecognition import AutomaticSpeechRecognition
+
+
 def record_new(filename):
-    samplerate = 44100  # Hertz
+    samplerate = 16000  # Hertz
     duration = 5  # seconds
 
     print("* recording")
     mydata = sd.rec(int(samplerate * duration), samplerate=samplerate,
-                    channels=2, blocking=True)
+                    channels=1, blocking=True)
     print("* done recording")
     sf.write(filename, mydata, samplerate)
 
-
-CHUNK = 1024
-FORMAT = pyaudio.paInt16  # paInt8
-CHANNELS = 2
-RATE = 44100  # sample rate
-RECORD_SECONDS = 5
 # WAVE_OUTPUT_FILENAME = "pedido_usuario.wav"
 
 #########
 parser = Parser()
 gateway = OmdbGateway()
 service = OmdbService(gateway)
+asr = AutomaticSpeechRecognition()
 INFORMACION_DISPONIBLE = ["actores", "género", "año", "duración", "director", "idioma", "productor"]
 #########
 
@@ -93,19 +91,19 @@ def main():
     #text_to_speech("pregunta_maquina_intro.wav", "Buenos días, bienvenidos al trabajo " +
                     #"práctico número dos de la materia, procesamiento del habla. En este sistema usted podrá reservar entradas de cine para una película, y también podrá obtener información de una película en particular"
                     #, rate_change="+0%", f0mean_change="+0%")
-    #os.system("play sounds/pregunta_maquina_intro.wav")
+    os.system("play sounds/pregunta_maquina_intro.wav")
 
 
     while (not fin):
         #text_to_speech("sounds/pregunta_maquina_inicial.wav", "Si desea obtener información de una película, diga información, o bien, si quiere reservar entradas de cine diga reservar. En caso de no querer nada, simplemente diga la palabra nada", rate_change="+0%", f0mean_change="+0%")
-        #os.system("play sounds/pregunta_maquina_inicial.wav")
+        os.system("play sounds/pregunta_maquina_inicial.wav")
 
         record_new("pedido_usuario_incial.wav")
 
         os.system("play sounds/espera.wav")
 
-        pedido_usuario = speech_to_text("pedido_usuario_incial.wav".encode('utf-8'))
-        pedido_usuario = transformar_pedido(pedido_usuario)
+        alternatives = asr.recognize(audio_file_name="pedido_usuario_incial.wav")
+        pedido_usuario = alternatives[0].transcript
 
         print(pedido_usuario)
 
@@ -118,8 +116,9 @@ def main():
             while(repetir):
                 os.system("play sounds/pregunta_maquina_pelicula.wav")
                 record_new("pelicula.wav")
-                pelicula = speech_to_text("pelicula.wav".encode('utf-8'))
-                pelicula = transformar_pedido(pelicula)
+
+                alternatives = asr.recognize(audio_file_name="pelicula.wav")
+                pelicula = alternatives[0].transcript
 
                 print(pelicula)
 
@@ -141,8 +140,9 @@ def main():
             while(repetir):
                 os.system("play pregunta_maquina_fechas.wav")
                 record_new("fechas.wav")
-                fecha = speech_to_text("fechas.wav".encode('utf-8'))
-                fecha = transformar_pedido(fecha)
+
+                alternatives = asr.recognize(audio_file_name="fechas.wav")
+                fecha = alternatives[0].transcript
 
                 print(fecha)
 
@@ -185,8 +185,9 @@ def main():
             while(repetir):
                 os.system("play sounds/pregunta_maquina_horarios.wav")
                 record_new("horario.wav")
-                horario = speech_to_text("horario.wav".encode('utf-8'))
-                horario = transformar_pedido(horario)
+
+                alternatives = asr.recognize(audio_file_name="horario.wav")
+                horario = alternatives[0].transcript
 
                 print(horario)
 
@@ -206,8 +207,9 @@ def main():
             while(repetir):
                 os.system("play sounds/pregunta_maquina_butaca.wav")
                 record_new("butaca.wav")
-                butaca = speech_to_text("butaca.wav".encode('utf-8'))
-                butaca = transformar_pedido(butaca)
+
+                alternatives = asr.recognize(audio_file_name="butaca.wav")
+                butaca = alternatives[0].transcript
 
                 print(butaca)
 
@@ -232,10 +234,8 @@ def main():
 
                     os.system("play sounds/espera.wav")
 
-                    pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
-                    #pelicula = speech_to_text_EN("pelicula_info.wav".encode('utf-8'))
-
-                    pelicula = transformar_pedido(pelicula)
+                    alternatives = asr.recognize(audio_file_name="pelicula_info.wav")
+                    pelicula = alternatives[0].transcript
                     print(pelicula)
 
                     json = service.movie(pelicula)
@@ -256,12 +256,14 @@ def main():
                         os.system("play pregunta_maquina_tipo_info.wav")
 
                         record_new("usuario_tipo_info.wav")
-                        tipo_info = speech_to_text("usuario_tipo_info.wav".encode('utf-8'))
-                        tipo_info = transformar_pedido(tipo_info)
+
+                        alternatives = asr.recognize(audio_file_name="usuario_tipo_info.wav")
+                        tipo_info = alternatives[0].transcript
+
                         print(tipo_info)
 
                         if tipo_info not in INFORMACION_DISPONIBLE:
-                            text_to_speech("sounds/error_informacion_no_encontrada.wav", "Disculpe, no pudimos realizar el pedido. Diga alguna de las siguientes opciones. actores. género. año. duración. director. idioma, o productor.", rate_change="+0%", f0mean_change="+0%")
+                            #text_to_speech("sounds/error_informacion_no_encontrada.wav", "Disculpe, no pudimos realizar el pedido. Diga alguna de las siguientes opciones. actores. género. año. duración. director. idioma, o productor.", rate_change="+0%", f0mean_change="+0%")
                             os.system("play sounds/error_informacion_no_encontrada.wav")
                         else:
                             no_encontre_informacion = False
@@ -279,8 +281,9 @@ def main():
 
                         os.system("play sounds/mas_info.wav")
                         record_new("new_info.wav")
-                        new_info = speech_to_text("new_info.wav".encode('utf-8'))
-                        new_info = transformar_pedido(new_info)
+
+                        alternatives = asr.recognize(audio_file_name="new_info.wav")
+                        new_info = alternatives[0].transcript
 
                         print(new_info)
 
