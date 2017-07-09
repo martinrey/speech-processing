@@ -232,8 +232,8 @@ def main():
 
                     os.system("play sounds/espera.wav")
 
-                    pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
-                    #pelicula = speech_to_text_EN("pelicula_info.wav".encode('utf-8'))
+                    #pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
+                    pelicula = speech_to_text_EN("pelicula_info.wav".encode('utf-8'))
 
                     pelicula = transformar_pedido(pelicula)
                     print(pelicula)
@@ -241,7 +241,7 @@ def main():
                     json = service.movie(pelicula)
 
                     if movie_not_found(json=json):
-                        text_to_speech("error_pelicula_no_encontrada.wav", "Disculpe, no pudimos encontrar la película. Por favor pruebe diciendo el título en inglés.", rate_change="+0%", f0mean_change="+0%")
+                        text_to_speech("sounds/error_pelicula_no_encontrada.wav", "Disculpe, no pudimos encontrar la película. Por favor diga el título de una película en inglés.", rate_change="+0%", f0mean_change="+0%")
                         os.system("play sounds/error_pelicula_no_encontrada.wav")
                     else:
                         no_encontre_la_pelicula = False
