@@ -90,7 +90,7 @@ def main():
     #text_to_speech("pregunta_maquina_intro.wav", "Buenos días, bienvenidos al trabajo " +
                     #"práctico número dos de la materia, procesamiento del habla. En este sistema usted podrá reservar entradas de cine para una película, y también podrá obtener información de una película en particular"
                     #, rate_change="+0%", f0mean_change="+0%")
-    #os.system("play sounds/pregunta_maquina_intro.wav")
+    os.system("play sounds/pregunta_maquina_intro.wav")
 
 
     while (not fin):
@@ -235,36 +235,60 @@ def main():
 
                     json = service.movie(pelicula)
 
-
-
                     if movie_not_found(json=json):
                         #text_to_speech("error_pelicula_no_encontrada.wav", "Disculpe, no pudimos encontrar la pelicula", rate_change="+0%", f0mean_change="+0%")
                         os.system("play sounds/error_pelicula_no_encontrada.wav")
                     else:
                         no_encontre_la_pelicula = False
 
-                no_encontre_informacion = True
-                while(no_encontre_informacion):
-                    pregunta = "¿Que información desea buscar sobre la película " + str(pelicula)
-                    text_to_speech("pregunta_maquina_tipo_info.wav", pregunta, rate_change="+0%", f0mean_change="+0%")
+                quiero_mas_info = True
+                while(quiero_mas_info):
+                    no_encontre_informacion = True
+                    while(no_encontre_informacion):
+                        pregunta = "¿Que información desea buscar sobre la película " + str(pelicula)
+                        text_to_speech("pregunta_maquina_tipo_info.wav", pregunta, rate_change="+0%", f0mean_change="+0%")
 
-                    os.system("play pregunta_maquina_tipo_info.wav")
+                        os.system("play pregunta_maquina_tipo_info.wav")
 
-                    record_new("usuario_tipo_info.wav")
-                    tipo_info = speech_to_text("usuario_tipo_info.wav".encode('utf-8'))
-                    tipo_info = transformar_pedido(tipo_info)
-                    print(tipo_info)
+                        record_new("usuario_tipo_info.wav")
+                        tipo_info = speech_to_text("usuario_tipo_info.wav".encode('utf-8'))
+                        tipo_info = transformar_pedido(tipo_info)
+                        print(tipo_info)
 
-                    if tipo_info not in INFORMACION_DISPONIBLE:
-                        text_to_speech("sounds/error_informacion_no_encontrada.wav", "Disculpe, no pudimos realizar el pedido. Diga alguna de las siguientes opciones. actores. género. año. duración. idioma, o productor.", rate_change="+0%", f0mean_change="+0%")
-                        os.system("play sounds/error_informacion_no_encontrada.wav")
-                    else:
-                        no_encontre_informacion = False
+                        if tipo_info not in INFORMACION_DISPONIBLE:
+                            #text_to_speech("sounds/error_informacion_no_encontrada.wav", "Disculpe, no pudimos realizar el pedido. Diga alguna de las siguientes opciones. actores. género. año. duración. idioma, o productor.", rate_change="+0%", f0mean_change="+0%")
+                            os.system("play sounds/error_informacion_no_encontrada.wav")
+                            print("if")
+                        else:
+                            print("else")
+                            no_encontre_informacion = False
 
-                rta = parser.parse(pelicula, tipo_info)
-                text_to_speech("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
-                
-                os.system("play maquina_respuesta_consulta.wav")
+                        print("antes parser")
+                        rta = parser.parse(pelicula, tipo_info)
+                        print("despues parser")
+                        text_to_speech("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
+
+                        os.system("play maquina_respuesta_consulta.wav")
+
+
+                        no_entendi = True
+                        while(no_entendi):
+                            text_to_speech("sounds/mas_info.wav", "Si desea obtener mas información sobre la película, diga sí. En caso contrario diga, no", rate_change="+0%", f0mean_change="+0%")
+
+                            os.system("play sounds/mas_info.wav")
+                            record_new("new_info.wav")
+                            new_info = speech_to_text("new_info.wav".encode('utf-8'))
+                            new_info = transformar_pedido(new_info)
+
+                            print(new_info)
+
+                            if(new_info == "si" or new_info == "sí"):
+                                no_entendi = False
+                            elif(new_info == "no"):
+                                no_entendi = False
+                                quiero_mas_info = False
+                            else:
+                                os.system("play sounds/error_butaca_reserva.wav")
 
         elif("nada" in pedido_usuario or "fin" in pedido_usuario):
             fin = True
