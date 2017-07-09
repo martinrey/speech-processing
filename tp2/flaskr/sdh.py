@@ -75,7 +75,10 @@ tts = TextToSpeechV1(username='823bf474-b3a1-454c-9daa-f39f1fe7fba8', password='
 #     wf.close()
 
 def transformar_pedido(pedido):
-    return str(pedido["results"][0]["alternatives"][0]["transcript"]).strip()
+    if(len(pedido["results"]) == 0):
+        return "vacia"
+    else:
+        return str(pedido["results"][0]["alternatives"][0]["transcript"]).strip()
 
 # GENERALIZARLO EN UN ERROR HANDLER
 def movie_not_found(json):
@@ -105,7 +108,6 @@ def main():
         pedido_usuario = transformar_pedido(pedido_usuario)
 
         print(pedido_usuario)
-
 
         if("reservar" in pedido_usuario or "reserva" in pedido_usuario):
 
@@ -152,6 +154,7 @@ def main():
                     os.system("play sounds/error_fecha_reserva.wav")
                 else:
                     repetir = False
+
             ########### CINES ###################
             #
             # text_to_speech("pregunta_maquina_cines_1.wav", "Listo, ahora necesito saber en que cine desea ver la película",
@@ -229,8 +232,8 @@ def main():
 
                     os.system("play sounds/espera.wav")
 
-                    #pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
-                    pelicula = speech_to_text_EN("pelicula_info.wav".encode('utf-8'))
+                    pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
+                    #pelicula = speech_to_text_EN("pelicula_info.wav".encode('utf-8'))
 
                     pelicula = transformar_pedido(pelicula)
                     print(pelicula)
@@ -260,18 +263,15 @@ def main():
                         if tipo_info not in INFORMACION_DISPONIBLE:
                             text_to_speech("sounds/error_informacion_no_encontrada.wav", "Disculpe, no pudimos realizar el pedido. Diga alguna de las siguientes opciones. actores. género. año. duración. director. idioma, o productor.", rate_change="+0%", f0mean_change="+0%")
                             os.system("play sounds/error_informacion_no_encontrada.wav")
-                            print("if")
                         else:
-                            print("else")
                             no_encontre_informacion = False
 
                         print("antes parser")
                         rta = parser.parse(pelicula, tipo_info)
                         print("despues parser")
+                        #text_to_speech_EN("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
                         text_to_speech("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
-
                         os.system("play maquina_respuesta_consulta.wav")
-
 
                         no_entendi = True
                         while(no_entendi):
