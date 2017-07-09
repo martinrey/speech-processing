@@ -21,6 +21,11 @@ class Parser(object):
         if("año" in tipo_info):
             anio = service.anio(pelicula)
             answer = "El año en el que se filmó la película es " + str(anio)
+
+        if("director" in tipo_info):
+            director = service.director(pelicula)
+            answer = "El director de la película es " + str(director)
+
         if("duracion" in tipo_info):
             duracion = service.duracion(pelicula)
             duracion = duracion.split()

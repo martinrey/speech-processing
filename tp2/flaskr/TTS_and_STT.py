@@ -30,6 +30,16 @@ def speech_to_text(filename, stt=stt):
                                  continuous="true")
   return(ibm_recognized)
 
+def speech_to_text_EN(filename, stt=stt):
+  audio_file = open(filename, "rb")
+  ibm_recognized = stt.recognize(audio_file,
+                                 content_type="audio/wav",
+                                 model="en-US_BroadbandModel",
+                                 timestamps="true",
+                                 max_alternatives="1",
+                                 continuous="true")
+  return(ibm_recognized)
+
 # Síntesis del texto 'text', especificando cambios en tasa de habla y f0, ambos en
 # porcentaje respecto del default del sistema. El resultado se guarda en 'filename'.
 # Es posible que el wav generado tenga mal el header, lo cual se arregla con:
@@ -42,6 +52,13 @@ def text_to_speech(filename, text, rate_change="+0%", f0mean_change="+0%", tts=t
                                     voice="es-US_SofiaVoice"))
     audio_file.close()
 
+def text_to_speech_EN(filename, text, rate_change="+0%", f0mean_change="+0%", tts=tts):
+  ssml_text = '<prosody rate="%s" pitch="%s"> %s </prosody>' % (rate_change, f0mean_change, text)
+  with open(filename, 'wb') as audio_file:
+    audio_file.write(tts.synthesize(ssml_text,
+                                    accept='audio/wav',
+                                    voice="en-US_LisaVoice"))
+    audio_file.close()
 
 if __name__ == "__main__":
   # Probamos la síntesis...

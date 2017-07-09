@@ -8,7 +8,7 @@ import os
 from gateway.OmdbGateway import OmdbGateway
 from parsers.Parser import Parser
 from services.OmdbService import OmdbService
-from TTS_and_STT import text_to_speech, speech_to_text
+from TTS_and_STT import text_to_speech, speech_to_text, speech_to_text_EN, text_to_speech_EN
 from watson_developer_cloud import SpeechToTextV1, TextToSpeechV1
 
 
@@ -37,7 +37,7 @@ RECORD_SECONDS = 5
 parser = Parser()
 gateway = OmdbGateway()
 service = OmdbService(gateway)
-INFORMACION_DISPONIBLE = ["actores", "género", "año", "duración", "argumento", "idioma", "poster", "productor"]
+INFORMACION_DISPONIBLE = ["actores", "género", "año", "duración", "director", "idioma", "productor"]
 #########
 
 stt = SpeechToTextV1(username='6f01e8bb-2faa-42a6-bec3-c1e236337b05', password='wRfZa13pn5Ke')
@@ -90,12 +90,12 @@ def main():
     #text_to_speech("pregunta_maquina_intro.wav", "Buenos días, bienvenidos al trabajo " +
                     #"práctico número dos de la materia, procesamiento del habla. En este sistema usted podrá reservar entradas de cine para una película, y también podrá obtener información de una película en particular"
                     #, rate_change="+0%", f0mean_change="+0%")
-    os.system("play sounds/pregunta_maquina_intro.wav")
+    #os.system("play sounds/pregunta_maquina_intro.wav")
 
 
     while (not fin):
         #text_to_speech("sounds/pregunta_maquina_inicial.wav", "Si desea obtener información de una película, diga información, o bien, si quiere reservar entradas de cine diga reservar. En caso de no querer nada, simplemente diga la palabra nada", rate_change="+0%", f0mean_change="+0%")
-        os.system("play sounds/pregunta_maquina_inicial.wav")
+        #os.system("play sounds/pregunta_maquina_inicial.wav")
 
         record_new("pedido_usuario_incial.wav")
 
@@ -229,14 +229,16 @@ def main():
 
                     os.system("play sounds/espera.wav")
 
-                    pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
+                    #pelicula = speech_to_text("pelicula_info.wav".encode('utf-8'))
+                    pelicula = speech_to_text_EN("pelicula_info.wav".encode('utf-8'))
+
                     pelicula = transformar_pedido(pelicula)
                     print(pelicula)
 
                     json = service.movie(pelicula)
 
                     if movie_not_found(json=json):
-                        #text_to_speech("error_pelicula_no_encontrada.wav", "Disculpe, no pudimos encontrar la pelicula", rate_change="+0%", f0mean_change="+0%")
+                        text_to_speech("error_pelicula_no_encontrada.wav", "Disculpe, no pudimos encontrar la película. Por favor pruebe diciendo el título en inglés.", rate_change="+0%", f0mean_change="+0%")
                         os.system("play sounds/error_pelicula_no_encontrada.wav")
                     else:
                         no_encontre_la_pelicula = False
@@ -256,7 +258,7 @@ def main():
                         print(tipo_info)
 
                         if tipo_info not in INFORMACION_DISPONIBLE:
-                            #text_to_speech("sounds/error_informacion_no_encontrada.wav", "Disculpe, no pudimos realizar el pedido. Diga alguna de las siguientes opciones. actores. género. año. duración. idioma, o productor.", rate_change="+0%", f0mean_change="+0%")
+                            text_to_speech("sounds/error_informacion_no_encontrada.wav", "Disculpe, no pudimos realizar el pedido. Diga alguna de las siguientes opciones. actores. género. año. duración. director. idioma, o productor.", rate_change="+0%", f0mean_change="+0%")
                             os.system("play sounds/error_informacion_no_encontrada.wav")
                             print("if")
                         else:
