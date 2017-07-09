@@ -267,30 +267,30 @@ def main():
                             no_encontre_informacion = False
 
 
-                        rta = parser.parse(pelicula, tipo_info)
+                    rta = parser.parse(pelicula, tipo_info)
 
-                        #text_to_speech_EN("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
-                        text_to_speech("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
-                        os.system("play maquina_respuesta_consulta.wav")
+                    #text_to_speech_EN("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
+                    text_to_speech("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
+                    os.system("play maquina_respuesta_consulta.wav")
 
-                        no_entendi = True
-                        while(no_entendi):
-                            text_to_speech("sounds/mas_info.wav", "Si desea obtener mas información sobre la película, diga sí. En caso contrario diga, no", rate_change="+0%", f0mean_change="+0%")
+                    no_entendi = True
+                    while(no_entendi):
+                        text_to_speech("sounds/mas_info.wav", "Si desea obtener mas información sobre la película, diga sí. En caso contrario diga, no", rate_change="+0%", f0mean_change="+0%")
 
-                            os.system("play sounds/mas_info.wav")
-                            record_new("new_info.wav")
-                            new_info = speech_to_text("new_info.wav".encode('utf-8'))
-                            new_info = transformar_pedido(new_info)
+                        os.system("play sounds/mas_info.wav")
+                        record_new("new_info.wav")
+                        new_info = speech_to_text("new_info.wav".encode('utf-8'))
+                        new_info = transformar_pedido(new_info)
 
-                            print(new_info)
+                        print(new_info)
 
-                            if(new_info == "si" or new_info == "sí"):
-                                no_entendi = False
-                            elif(new_info == "no"):
-                                no_entendi = False
-                                quiero_mas_info = False
-                            else:
-                                os.system("play sounds/error_butaca_reserva.wav")
+                        if(new_info == "si" or new_info == "sí"):
+                            no_entendi = False
+                        elif(new_info == "no"):
+                            no_entendi = False
+                            quiero_mas_info = False
+                        else:
+                            os.system("play sounds/error_butaca_reserva.wav")
 
         elif("nada" in pedido_usuario or "fin" in pedido_usuario):
             fin = True
