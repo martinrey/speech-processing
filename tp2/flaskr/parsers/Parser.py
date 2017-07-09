@@ -11,35 +11,53 @@ class Parser(object):
 
         if("actores" in tipo_info):
             actores = service.actors(pelicula)
-            answer = "Los actores de la película son " + str(actores)
+            if(actores == "N/A"):
+                answer = "Lo siento, no se encontraron actores para esa película."
+            else:
+                answer = "Los actores de la película son " + str(actores)
         if("género" in tipo_info):
             genero = service.genre(pelicula)
-            if(len(genero.split()) > 1):
-                answer = "Los generos de la película son " + str(genero)
+            if(genero == "N/A"):
+                answer = "Lo siento, no se encontraron géneros para esa película."
             else:
-                answer = "El género de la película es " + str(genero)
+                if(len(genero.split()) > 1):
+                    answer = "Los generos de la película son " + str(genero)
+                else:
+                    answer = "El género de la película es " + str(genero)
         if("año" in tipo_info):
             anio = service.anio(pelicula)
-            answer = "El año en el que se filmó la película es " + str(anio)
+            if(anio == "N/A"):
+                answer = "Lo siento, no se el año para esa película."
+            else:
+                answer = "El año en el que se filmó la película es " + str(anio)
 
         if("director" in tipo_info):
             director = service.director(pelicula)
-            answer = "El director de la película es " + str(director)
+            if(director == "N/A"):
+                answer = "Lo siento, no se encontró el director para esa película."
+            else:
+                answer = "El director de la película es " + str(director)
 
-        if("duracion" in tipo_info):
+        if("duracion" in tipo_info or "duración" in tipo_info):
             duracion = service.duracion(pelicula)
-            duracion = duracion.split()
-            answer = "La duración de la película es de " + str(duracion[0]) + " minutos"
+            if(duracion == "N/A"):
+                answer = "Lo siento, no se encontró la duración para esa película."
+            else:
+                duracion = duracion.split()
+                answer = "La duración de la película es de " + str(duracion[0]) + " minutos"
+
         if("argumento" in tipo_info):
             plot = service.plot(pelicula)
             answer = str(plot)
         if("idioma" in tipo_info):
             idioma = service.language(pelicula)
-            if(len(idioma.split()) > 1):
-                answer = "Los idiomas de la película son  " + str(idioma)
+            if(idioma == "N/A"):
+                answer = "Lo siento, no se encontraron los idiomas para esa película."
             else:
-                answer = "El idioma de la película es " + str(idioma)
-            answer = ""
+                if(len(idioma.split()) > 1):
+                    answer = "Los idiomas de la película son  " + str(idioma)
+                else:
+                    answer = "El idioma de la película es " + str(idioma)
         if("premios" in tipo_info):
             premios = service.awards(pelicula)
             answer = "Los premios de la película son " + str(premios)
@@ -50,5 +68,8 @@ class Parser(object):
             answer = "El rating de la película es " + str(rating)
         if("productor" in tipo_info):
             productor = service.production(pelicula)
-            answer = "El productor de la película es " + str(productor)
+            if(productor == "N/A"):
+                answer = "Lo siento, no se encontraron productores para esa película."
+            else:
+                answer = "El productor de la película es " + str(productor)
         return answer

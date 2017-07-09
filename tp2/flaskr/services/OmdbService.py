@@ -6,9 +6,9 @@ class OmdbService(object):
         return self.omdb_gateway.movie(movie=movie)
 
     def director(self, movie):
-        return self.omdb_gateway.movie(movie=movie)
+        movie_json = self.omdb_gateway.movie(movie=movie)
         return movie_json['Director']
-            
+
     def genre(self, movie):
         movie_json = self.omdb_gateway.movie(movie=movie)
         return movie_json['Genre']

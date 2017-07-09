@@ -266,9 +266,9 @@ def main():
                         else:
                             no_encontre_informacion = False
 
-                        print("antes parser")
+
                         rta = parser.parse(pelicula, tipo_info)
-                        print("despues parser")
+
                         #text_to_speech_EN("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
                         text_to_speech("maquina_respuesta_consulta.wav", rta, rate_change="+0%", f0mean_change="+0%")
                         os.system("play maquina_respuesta_consulta.wav")
