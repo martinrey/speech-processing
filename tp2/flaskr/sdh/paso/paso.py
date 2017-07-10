@@ -46,5 +46,8 @@ class Paso(object):
         record_new("respuesta.wav")
 
     def reconocer_respuesta(self):
-        alternatives = asr.recognize(audio_file_name="respuesta.wav")
-        self.respuesta = alternatives[0].transcript.lower()
+        try:
+            alternatives = asr.recognize(audio_file_name="respuesta.wav")
+            self.respuesta = alternatives[0].transcript.lower()
+        except:
+            self.respuesta = "vacio"        
